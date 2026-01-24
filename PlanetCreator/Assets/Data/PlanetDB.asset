@@ -14,4 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_planets:
   - {fileID: 11400000, guid: 90b0224c5615eb94eae6958a866d3f4e, type: 2}
+  - {fileID: 11400000, guid: e404394dd5ae01f4a8d1fc0848e8870b, type: 2}
   - {fileID: 11400000, guid: c8079872c42580a4083b7f00ee42ffb1, type: 2}
+  - {fileID: 11400000, guid: bfd0f89972edf8a43b1a168db2e02755, type: 2}
+  - {fileID: 11400000, guid: 76e79182fc8f5c94dac07b533a812433, type: 2}
+  - {fileID: 11400000, guid: 899a169542b82544099e3f3105d3a7e1, type: 2}
+  - {fileID: 11400000, guid: d8b0b7d4bbcc0e94280ba8e43e0bb59d, type: 2}
+  - {fileID: 11400000, guid: f22ad7b1642f622498f37bbb7ec19891, type: 2}
