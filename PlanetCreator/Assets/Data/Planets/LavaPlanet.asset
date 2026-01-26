@@ -12,7 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a43bda4e29c23a4090e09055d0f53de, type: 3}
   m_Name: LavaPlanet
   m_EditorClassIdentifier: 
-  m_chemical: 000000000100000003000000
+  m_combinations:
+  - m_chemicalTypes: 000000000100000003000000
+  - m_chemicalTypes: 000000000300000004000000
+  - m_chemicalTypes: 000000000300000002000000
+  - m_chemicalTypes: 010000000300000004000000
+  - m_chemicalTypes: 010000000300000002000000
+  - m_chemicalTypes: 010000000100000003000000
+  - m_chemicalTypes: 000000000000000003000000
   m_remoteness: 0
   m_mass: 0
   m_size: 1

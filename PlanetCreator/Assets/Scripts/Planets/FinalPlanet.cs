@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Planets
@@ -5,7 +6,7 @@ namespace Planets
     [CreateAssetMenu(menuName = "Planet")]
     public class FinalPlanet : ScriptableObject
     {
-        [SerializeField] private ChemicalType[] m_chemical = new ChemicalType[3];
+        [SerializeField] private List<ChemicalCombination> m_combinations;
         [SerializeField] private Remoteness m_remoteness;
         [SerializeField] private Mass m_mass;
         [SerializeField] private Size m_size;
