@@ -14,7 +14,6 @@ public class Fade : MonoBehaviour
     public void FadeOut()
     {
         m_buttons.blocksRaycasts = false;
-        //Debug.Log("јуч!");
         m_canvasAnimator.SetBool("Fade", false);
     }
 }
