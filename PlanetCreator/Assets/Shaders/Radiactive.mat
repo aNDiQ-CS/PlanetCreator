@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-4627009064678319912
+--- !u!114 &-3915034533504105716
 MonoBehaviour:
   m_ObjectHideFlags: 11
   m_CorrespondingSourceObject: {fileID: 0}
@@ -20,7 +20,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Liquid
+  m_Name: Radiactive
   m_Shader: {fileID: -6465566751694194690, guid: 0345387fcf930e1459e19a9fb8b14acd,
     type: 3}
   m_Parent: {fileID: 0}
@@ -51,12 +51,12 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Fill: 0.47
+    - _Fill: 0.462
     - _QueueControl: 0
     - _QueueOffset: 0
     - _WobbleX: 0
     - _WobbleZ: 0
     m_Colors:
-    - _SideColor: {r: 0, g: 0.21698123, b: 0.6509434, a: 1}
-    - _TopColor: {r: 0.18178178, g: 0.54682666, b: 0.8962264, a: 1}
+    - _SideColor: {r: 0.04392132, g: 0.4433962, b: 0.04480974, a: 1}
+    - _TopColor: {r: 0.013645958, g: 0.1509434, b: 0.010679956, a: 1}
   m_BuildTextureStacks: []
