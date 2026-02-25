@@ -1,135 +1,153 @@
 using UnityEngine;
 
-/// <summary>
-/// DragAndDrop — простой drag&drop с AddForce для мыши и touch.
-/// Исправлена ошибка типов: теперь touch позиция конвертируется в Vector3 с корректным z.
-/// Требования: объект должен иметь Collider и Rigidbody.
-/// </summary>
 [RequireComponent(typeof(Rigidbody), typeof(Collider))]
 public class DragAndDrop : MonoBehaviour
 {
-    [SerializeField] private float m_force = 500f;
+    [Header("Drag Settings")]
+    [SerializeField] private float m_force = 600f;
+    [SerializeField] private float m_damping = 10f; // Для плавности остановки
 
-    // Смещение между позицией курсора (screen) и экранной позицией центра объекта
-    private Vector3 m_mousePosition;
+    [Header("Depth & Alignment (Выравнивание)")]
+    public bool lockToPlane = true;       // Включить фиксацию в плоскости
+    public bool autoDetectPlane = true;    // Авто-выбор оси (X или Z) в зависимости от камеры
+    public float fixedCoordinate = 0f;     // Ручная координата (если autoDetectPlane выключен)
+
+    [Tooltip("Если объект с этим тегом есть в сцене, возьмем его Z")]
+    public string containerTag = "Container";
+
+    private Vector3 m_mouseOffset;
     private Rigidbody m_rigidbody;
-
-    // Для touch: id пальца, который захватил объект. -1 — ничего не захвачено.
     private int m_touchId = -1;
+    private float m_initialZDistance;
 
     private void OnEnable()
     {
         m_rigidbody = GetComponent<Rigidbody>();
+        // Настраиваем Rigidbody для более стабильного перетаскивания
+        m_rigidbody.drag = m_damping;
+        m_rigidbody.angularDrag = 5f;
     }
 
-    private Vector3 GetMousePosition()
+    private Vector3 GetMouseWorldPos()
     {
-        if (Camera.main == null)
-        {
-            Debug.LogError("DragAndDrop: Camera.main не найдена. Пометьте камеру тегом MainCamera.");
-            return Vector3.zero;
-        }
-        // возвращаем экранную позицию объекта (x,y) и z = расстояние до камеры (нужно для ScreenToWorldPoint)
-        return Camera.main.WorldToScreenPoint(transform.position);
+        Vector3 mousePoint = Input.mousePosition;
+        // Используем дистанцию от объекта до камеры как глубину
+        mousePoint.z = m_initialZDistance;
+        return Camera.main.ScreenToWorldPoint(mousePoint);
     }
 
-    #region Mouse handlers
-
+    #region Mouse Handlers
     private void OnMouseDown()
     {
-        // Сохраняем смещение (чтобы позиция захвата была корректной)
-        m_mousePosition = Input.mousePosition - GetMousePosition();
+        if (Camera.main == null) return;
+
+        // Определяем расстояние до камеры в момент захвата
+        m_initialZDistance = Camera.main.WorldToScreenPoint(transform.position).z;
+        m_mouseOffset = transform.position - GetMouseWorldPos();
+
+        // Если нужно выровнять по контейнеру в момент захвата
+        if (lockToPlane)
+        {
+            ApplyPlaneConstraint();
+        }
     }
 
     private void OnMouseDrag()
     {
-        if (Camera.main == null) return;
-
-        Vector3 screenPoint = (Vector3)Input.mousePosition - m_mousePosition; // ввод как Vector3 (z будет ноль, но m_mousePosition.z учитывает)
-        // Обеспечим корректный z: используем z из GetMousePosition()
-        screenPoint.z = GetMousePosition().z;
-        Vector3 cameraDrag = Camera.main.ScreenToWorldPoint(screenPoint);
-
-        m_rigidbody.AddForce((cameraDrag - transform.position) * m_force, ForceMode.Force);
-        m_rigidbody.velocity = Vector3.zero;
+        MoveObject(GetMouseWorldPos() + m_mouseOffset);
     }
-
     #endregion
 
-    #region Touch handlers
-
+    #region Touch Handlers
+    // Логика для мобильных устройств (упрощенная версия)
     private void Update()
     {
-        if (Input.touchCount == 0)
+        if (Input.touchCount > 0)
         {
-            return;
-        }
-
-        // Обрабатываем все касания — нужен только тот, который захватил объект (m_touchId)
-        for (int i = 0; i < Input.touchCount; i++)
-        {
-            Touch t = Input.GetTouch(i);
-
-            switch (t.phase)
+            Touch touch = Input.GetTouch(0);
+            if (touch.phase == TouchPhase.Began)
             {
-                case TouchPhase.Began:
-                    TryBeginTouch(t);
-                    break;
-
-                case TouchPhase.Moved:
-                case TouchPhase.Stationary:
-                    if (m_touchId == t.fingerId)
-                        ContinueTouchDrag(t);
-                    break;
-
-                case TouchPhase.Ended:
-                case TouchPhase.Canceled:
-                    if (m_touchId == t.fingerId)
-                        EndTouchDrag();
-                    break;
-            }
-        }
-    }
-
-    private void TryBeginTouch(Touch t)
-    {
-        if (Camera.main == null) return;
-
-        Ray ray = Camera.main.ScreenPointToRay(t.position);
-        if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity))
-        {
-            if (hit.collider != null)
-            {
-                // Начинаем drag только если касание попало в этот коллайдер (или в дочерний)
-                if (hit.collider.transform == this.transform || hit.collider.transform.IsChildOf(transform))
+                Ray ray = Camera.main.ScreenPointToRay(touch.position);
+                if (Physics.Raycast(ray, out RaycastHit hit))
                 {
-                    m_touchId = t.fingerId;
-
-                    // ВАЖНО: корректно формируем Vector3 для экранной точки и заливаем туда z из GetMousePosition()
-                    Vector3 touchScreenPoint = new Vector3(t.position.x, t.position.y, GetMousePosition().z);
-                    m_mousePosition = touchScreenPoint - GetMousePosition();
+                    if (hit.collider.transform == transform || hit.collider.transform.IsChildOf(transform))
+                    {
+                        m_touchId = touch.fingerId;
+                        m_initialZDistance = Camera.main.WorldToScreenPoint(transform.position).z;
+                        m_mouseOffset = transform.position - Camera.main.ScreenToWorldPoint(new Vector3(touch.position.x, touch.position.y, m_initialZDistance));
+                    }
                 }
             }
+            else if (touch.phase == TouchPhase.Moved && touch.fingerId == m_touchId)
+            {
+                Vector3 touchPos = new Vector3(touch.position.x, touch.position.y, m_initialZDistance);
+                MoveObject(Camera.main.ScreenToWorldPoint(touchPos) + m_mouseOffset);
+            }
+            else if (touch.phase == TouchPhase.Ended)
+            {
+                m_touchId = -1;
+            }
         }
     }
-
-    private void ContinueTouchDrag(Touch t)
-    {
-        if (Camera.main == null) return;
-
-        // Здесь исправлён момент: формируем Vector3 с тем же z, который использовался при захвате
-        Vector3 touchScreenPoint = new Vector3(t.position.x, t.position.y, GetMousePosition().z);
-        Vector3 screenPoint = touchScreenPoint - m_mousePosition;
-        Vector3 cameraDrag = Camera.main.ScreenToWorldPoint(screenPoint);
-
-        m_rigidbody.AddForce((cameraDrag - transform.position) * m_force, ForceMode.Force);
-        m_rigidbody.velocity = Vector3.zero;
-    }
-
-    private void EndTouchDrag()
-    {
-        m_touchId = -1;
-    }
-
     #endregion
+
+    private void MoveObject(Vector3 targetPos)
+    {
+        if (lockToPlane)
+        {
+            // Решаем, какую ось фиксировать на основе направления камеры
+            Vector3 camForward = Camera.main.transform.forward;
+
+            if (autoDetectPlane)
+            {
+                // Если камера смотрит больше "вперед-назад" (Z), фиксируем Z
+                if (Mathf.Abs(camForward.z) > Mathf.Abs(camForward.x))
+                {
+                    targetPos.z = fixedCoordinate;
+                }
+                else // Если камера смотрит "сбоку" (X), фиксируем X
+                {
+                    targetPos.x = fixedCoordinate;
+                }
+            }
+            else
+            {
+                targetPos.z = fixedCoordinate;
+            }
+        }
+
+        // Применяем силу к Rigidbody для движения к целевой точке
+        Vector3 force = (targetPos - transform.position) * m_force;
+        m_rigidbody.AddForce(force - m_rigidbody.velocity * m_damping);
+    }
+
+    private void ApplyPlaneConstraint()
+    {
+        // 1. Пытаемся найти контейнер, чтобы взять его координату
+        GameObject container = GameObject.FindGameObjectWithTag(containerTag);
+        if (container != null)
+        {
+            // Определяем, по какой оси выравнивать (по Z или по X)
+            Vector3 camForward = Camera.main.transform.forward;
+            if (Mathf.Abs(camForward.z) > Mathf.Abs(camForward.x))
+                fixedCoordinate = container.transform.position.z;
+            else
+                fixedCoordinate = container.transform.position.x;
+        }
+
+        // 2. Мгновенно подтягиваем колбу к нужной плоскости
+        Vector3 currentPos = transform.position;
+        Vector3 camFwd = Camera.main.transform.forward;
+
+        if (Mathf.Abs(camFwd.z) > Mathf.Abs(camFwd.x))
+            currentPos.z = fixedCoordinate;
+        else
+            currentPos.x = fixedCoordinate;
+
+        transform.position = currentPos;
+
+        // 3. Замораживаем вращение по осям, чтобы колба не заваливалась при перемещении 
+        // (Wobble сам будет управлять вращением, когда нужно)
+        m_rigidbody.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+    }
 }

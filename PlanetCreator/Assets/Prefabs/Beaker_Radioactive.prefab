@@ -27,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 2310784197964075614}
   serializedVersion: 2
   m_LocalRotation: {x: -0.7071068, y: -0, z: -0, w: 0.7071067}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0.1931464, z: 0}
   m_LocalScale: {x: 100, y: 100, z: 100}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -93,6 +93,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4429383321148013312}
+  - component: {fileID: 5325375671994436281}
+  - component: {fileID: 1012841296596652292}
+  - component: {fileID: 6632907331621056701}
   m_Layer: 0
   m_Name: Beaker_Radioactive
   m_TagString: Untagged
@@ -117,6 +120,72 @@ Transform:
   - {fileID: 983840181322676069}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!54 &5325375671994436281
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3425587632034422526}
+  serializedVersion: 4
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!65 &1012841296596652292
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3425587632034422526}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.20234866, y: 0.122030616, z: 0.17751624}
+  m_Center: {x: 0.0084808245, y: 0.26, z: -0.0014490113}
+--- !u!114 &6632907331621056701
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3425587632034422526}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 05e3c85d30fbd6b45ab2c685d4d1e784, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_force: 500
+  m_damping: 10
+  lockToPlane: 1
+  autoDetectPlane: 1
+  fixedCoordinate: 0
+  containerTag: Container
 --- !u!1 &4929415620913679505
 GameObject:
   m_ObjectHideFlags: 0
@@ -4975,7 +5044,7 @@ Transform:
   m_GameObject: {fileID: 6479521418952081995}
   serializedVersion: 2
   m_LocalRotation: {x: -0.7071068, y: -0, z: -0, w: 0.7071067}
-  m_LocalPosition: {x: 0, y: 0.06965359, z: 0}
+  m_LocalPosition: {x: 0, y: 0.2628, z: 0}
   m_LocalScale: {x: 85.858, y: 85.858, z: 85.858}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5043,24 +5112,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05e97dacd4da2b2429f960dec468ceb5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  neckPoint: {fileID: 3188083058063610773}
   MaxWobble: 1
   WobbleSpeed: 1
   Recovery: 1
-  neckPoint: {fileID: 3188083058063610773}
   pourThreshold: 20
   pourRate: 0.2
   minFillLevel: 0.5
   maxFillLevel: 0.55
-  raycastDistance: 2
+  useAutoTilt: 1
+  tiltSpeed: 5
+  targetTiltAngle: 75
   detectionRadius: 0.2
+  detectionOffset: {x: 0, y: -1, z: 0}
   containerLayerMask:
     serializedVersion: 2
-    m_Bits: 4294967295
-  pourParticles: {fileID: 7805662745343113014}
+    m_Bits: 64
+  streamPrefab: {fileID: 1341448518765470121, guid: a1b66388d5233d64b8dce9ce69b5c2f0,
+    type: 3}
   pourSound: {fileID: 0}
   chemicalType: 3
   chemicalColor: {r: 0.15686274, g: 0.62352943, b: 0.17427635, a: 1}
-  chemicalDensity: 1
-  chemicalViscosity: 1
-  isFlammable: 0
-  isRadioactive: 1
