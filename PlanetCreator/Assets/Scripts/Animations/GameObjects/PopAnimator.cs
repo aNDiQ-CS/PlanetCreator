@@ -8,8 +8,8 @@ public class PopAnimator : MonoBehaviour
     [SerializeField] private float m_excessMultiplier = 1.2f;       // Во сколько раз перепрыгиваем
 
     [Header("Времена (секунды)")]
-    [SerializeField] private float m_phase1Duration;                // От старта до переувеличения(overshoot)
-    [SerializeField] private float m_phase2Duration;                // От переувеличения(overshoot) до конечного размера(target)
+    [SerializeField][Tooltip("Время на изменение scale от 0 до увеличенного размера")][Range(0, 5)] private float m_phase1Duration;                // От старта до переувеличения(overshoot)
+    [SerializeField][Tooltip("Время на изменение scale от увеличенного размера до 1")][Range(0, 5)] private float m_phase2Duration;                // От переувеличения(overshoot) до конечного размера(target)
 
     [Header("Коллайдер и физика")]
     [SerializeField] private Collider m_col;
@@ -93,9 +93,9 @@ public class PopAnimator : MonoBehaviour
         Vector3 overshootScale = m_endScale * m_excessMultiplier;
 
         float elapsed = 0f;
-        while (elapsed < m_phase1Duration)
+        while (elapsed < m_phase2Duration)
         {
-            float t = elapsed / m_phase1Duration;
+            float t = elapsed / m_phase2Duration;
             transform.localScale = Vector3.Lerp(startScale, overshootScale, t);
             elapsed += Time.deltaTime;
             yield return null;
@@ -103,9 +103,9 @@ public class PopAnimator : MonoBehaviour
         transform.localScale = overshootScale;
 
         elapsed = 0f;
-        while (elapsed < m_phase2Duration)
+        while (elapsed < m_phase1Duration)
         {
-            float t = elapsed / m_phase2Duration;
+            float t = elapsed / m_phase1Duration;
             float smoothT = Mathf.SmoothStep(0f, 1f, t);
             transform.localScale = Vector3.Lerp(overshootScale, Vector3.zero, smoothT);
             elapsed += Time.deltaTime;

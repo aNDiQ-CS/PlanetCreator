@@ -141,7 +141,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &37207145
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2141,7 +2141,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!54 &433145850
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -2254,8 +2254,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_endScale: {x: 2.5, y: 2.5, z: 2.5}
   m_excessMultiplier: 1.4
-  m_phase1Duration: 0.2
-  m_phase2Duration: 0.6
+  m_phase1Duration: 0.3
+  m_phase2Duration: 0.8
   m_col: {fileID: 433145851}
   m_rb: {fileID: 433145850}
 --- !u!4 &433145855
@@ -2291,7 +2291,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &441467033
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3204,7 +3204,7 @@ PrefabInstance:
     - target: {fileID: 6776648865472979449, guid: 30fac5b43bae46f4d991c0da214a66ce,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8401745117250104189, guid: 30fac5b43bae46f4d991c0da214a66ce,
         type: 3}
@@ -7924,6 +7924,11 @@ PrefabInstance:
       propertyPath: worldCamera
       value: 
       objectReference: {fileID: 330585545}
+    - target: {fileID: 8887105222245745820, guid: 3bf5c30efc639a84f97dbf40b7736faf,
+        type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
