@@ -4,7 +4,7 @@ namespace Infrastructure.States
 {
     public class DialogState : MonoBehaviour, IState
     {
-        private StateMachine m_stateMachine;
+        private StateMachine m_stateMachine;        
 
         public DialogState(StateMachine stateMachine)
         {

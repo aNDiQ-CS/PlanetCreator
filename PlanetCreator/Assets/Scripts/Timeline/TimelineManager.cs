@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -11,6 +12,8 @@ public class TimelineManager : MonoBehaviour
 
     [SerializeField] private GameObject[] objectsToActivate;
     [SerializeField] private GameObject[] objectsToDeactivate;
+
+    public event Action CutsceneEnded;
     private void OnEnable()
     {
         if (m_director != null)
@@ -57,5 +60,7 @@ public class TimelineManager : MonoBehaviour
         {
             if (obj != null) obj.SetActive(false);
         }
+
+        CutsceneEnded?.Invoke();
     }
 }
