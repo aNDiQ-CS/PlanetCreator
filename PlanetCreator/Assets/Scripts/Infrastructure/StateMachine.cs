@@ -1,4 +1,4 @@
-﻿using Infrastructure.States;
+﻿    using Infrastructure.States;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -14,16 +14,23 @@ namespace Infrastructure
         {
             foreach(var state in states)
             {
+                Debug.Log(state.GetType());
                 m_states.Add(state.GetType(), state);
             }
         }
 
         public void ChangeState<T>()
             where T : IState
-        {
+        {            
             m_currentState?.Exit();
+            Debug.Log(typeof(T));
             m_currentState = m_states[typeof(T)];
             m_currentState.Enter();
+        }
+
+        private void Update()
+        {
+            Debug.Log(m_currentState);
         }
     }
 }

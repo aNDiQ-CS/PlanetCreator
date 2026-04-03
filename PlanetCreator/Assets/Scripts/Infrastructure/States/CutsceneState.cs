@@ -8,22 +8,26 @@ namespace Infrastructure.States
     {
         private StateMachine m_stateMachine;
         private TimelineManager m_timelineManager;
+        private TimeLineSkip m_timeLineSkip;
         private GameObject m_cutsceneCanvas;
 
         private void OnEnable()
         {
             m_timelineManager.CutsceneEnded += Exit;
+            m_timeLineSkip.CutsceneSkipped += Exit;
         }
 
         private void OnDisable()
         {
             m_timelineManager.CutsceneEnded -= Exit;
+            m_timeLineSkip.CutsceneSkipped -= Exit;
         }
 
-        public CutsceneState(StateMachine stateMachine, TimelineManager timelineManager, GameObject cutsceneCanvas)
+        public CutsceneState(StateMachine stateMachine, TimelineManager timelineManager, TimeLineSkip timeLineSkip, GameObject cutsceneCanvas)
         {
             m_stateMachine = stateMachine;
             m_timelineManager = timelineManager;
+            m_timeLineSkip = timeLineSkip;
             m_cutsceneCanvas = cutsceneCanvas;
         }
         public void Enter()

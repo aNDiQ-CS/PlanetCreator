@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.18359935, g: 0.22910862, b: 0.30539787, a: 1}
+  m_IndirectSpecularColor: {r: 0.18359964, g: 0.22910888, b: 0.30539876, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -254,6 +254,7 @@ GameObject:
   - component: {fileID: 58036818}
   - component: {fileID: 58036817}
   - component: {fileID: 58036816}
+  - component: {fileID: 58036820}
   m_Layer: 5
   m_Name: ButtonStart
   m_TagString: Untagged
@@ -358,6 +359,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 58036820}
+        m_TargetAssemblyTypeName: StartCutscene, Assembly-CSharp
+        m_MethodName: StartCutsceneState
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &58036818
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -396,6 +409,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 58036814}
   m_CullTransparentMesh: 1
+--- !u!114 &58036820
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 58036814}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d8bded53390c2b47826d3ec1fb1873f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_stateMachine: {fileID: 1439395681}
 --- !u!4 &106067486 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4725840561053436504, guid: 0b179ca889c4d6b4fa07decdb51d4acf,
@@ -728,7 +754,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_stateMachine: {fileID: 1439395681}
   m_timelineManager: {fileID: 615232331}
+  m_timeLineSkip: {fileID: 1045380020}
   m_cutsceneCanvas: {fileID: 1164181824}
+  m_dialog: {fileID: 1553290311}
 --- !u!1001 &347647384
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3694,6 +3722,7 @@ GameObject:
   - component: {fileID: 1045380019}
   - component: {fileID: 1045380018}
   - component: {fileID: 1045380017}
+  - component: {fileID: 1045380020}
   m_Layer: 5
   m_Name: SkipCatScene
   m_TagString: Untagged
@@ -3813,6 +3842,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 1045380020}
+        m_TargetAssemblyTypeName: TimeLineSkip, Assembly-CSharp
+        m_MethodName: SkipCutscene
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1045380018
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3851,6 +3892,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1045380015}
   m_CullTransparentMesh: 1
+--- !u!114 &1045380020
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1045380015}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 20d6533274db5ad40a77948144f21574, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_stateMachine: {fileID: 1439395681}
 --- !u!1 &1049612392
 GameObject:
   m_ObjectHideFlags: 0
