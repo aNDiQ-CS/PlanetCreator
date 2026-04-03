@@ -77,7 +77,7 @@ namespace Infrastructure.States
         /// </summary>
         private void OnCutsceneEnded()
         {
-            m_stateMachine.ChangeState<DialogState>();
+            m_stateMachine.ChangeState<LevelFlowState>();
         }
 
         /// <summary>
@@ -100,7 +100,7 @@ namespace Infrastructure.States
             yield return new WaitForSeconds(m_skipDelay);
 
             m_delayedTransition = null;
-            m_stateMachine.ChangeState<DialogState>();
+            m_stateMachine.ChangeState<LevelFlowState>();
         }
     }
 }

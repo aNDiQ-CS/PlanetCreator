@@ -8,6 +8,8 @@ public class Dialogue : MonoBehaviour
     [Serializable]
     public struct DialogueEntry
     {
+        [Tooltip("Название реплики для удобства в Inspector (не влияет на игру)")]
+        public string label;
         [TextArea(2, 5)] public string text;
         public AudioClip audioClip;
     }
@@ -33,20 +35,24 @@ public class Dialogue : MonoBehaviour
     /// </summary>
     public event Action DialogueFinished;
 
+    private Canvas m_canvas;
     private Coroutine typingRoutine;
     private Coroutine delayRoutine;
     private int currentIndex;
     private bool isDialogueActive;
     private bool isEntryComplete;
 
-    private void Reset()
+    private void Awake()
     {
-        if (worldCamera == null)
-            worldCamera = Camera.main;
+        m_canvas = GetComponent<Canvas>();
     }
 
     private void OnEnable()
     {
+        // World Space Canvas требует Event Camera для обработки кликов.
+        // Без неё кнопки не работают.
+        EnsureEventCamera();
+
         delayRoutine = StartCoroutine(StartWithDelay());
     }
 
@@ -66,6 +72,22 @@ public class Dialogue : MonoBehaviour
             transform.LookAt(
                 transform.position + rotation * Vector3.forward,
                 rotation * Vector3.up);
+        }
+    }
+
+    // ─────────────────── Camera fix ───────────────────
+
+    private void EnsureEventCamera()
+    {
+        if (worldCamera == null)
+            worldCamera = Camera.main;
+
+        // World Space Canvas (renderMode == 2) без камеры не принимает ввод
+        if (m_canvas != null
+            && m_canvas.renderMode == RenderMode.WorldSpace
+            && m_canvas.worldCamera == null)
+        {
+            m_canvas.worldCamera = worldCamera;
         }
     }
 
@@ -101,19 +123,23 @@ public class Dialogue : MonoBehaviour
     /// <summary>
     /// Привязать к кнопке "Далее" в Inspector:
     /// Button.OnClick → Dialogue.ShowNextEntry
+    ///
+    /// Первое нажатие во время печати — показать текст целиком.
+    /// Нажатие после завершения реплики — следующая реплика.
+    /// После последней реплики — завершение диалога → переход в мини-игру.
     /// </summary>
     public void ShowNextEntry()
     {
         if (!isDialogueActive) return;
 
-        // Если текст ещё печатается — показать сразу целиком
+        // Текст ещё печатается — показать сразу целиком
         if (!isEntryComplete)
         {
             SkipTyping();
             return;
         }
 
-        // Переход к следующей реплике
+        // Следующая реплика
         currentIndex++;
 
         if (currentIndex < m_textDialogue.Length)
@@ -123,7 +149,6 @@ public class Dialogue : MonoBehaviour
         }
         else
         {
-            // Все реплики проиграны
             EndDialogue();
         }
     }
@@ -147,14 +172,20 @@ public class Dialogue : MonoBehaviour
         if (displayText != null)
             displayText.text = "";
 
-        // Запускаем аудио
-        if (audioSource != null && entry.audioClip != null)
+        if (audioSource != null)
         {
-            audioSource.clip = entry.audioClip;
-            audioSource.Play();
+            if (entry.audioClip != null)
+            {
+                audioSource.clip = entry.audioClip;
+                audioSource.Play();
+            }
+            else
+            {
+                // У реплики нет аудио — останавливаем предыдущий клип
+                audioSource.Stop();
+            }
         }
 
-        // Запускаем печатание текста
         typingRoutine = StartCoroutine(TypeText(entry.text));
     }
 
@@ -178,7 +209,6 @@ public class Dialogue : MonoBehaviour
             typingRoutine = null;
         }
 
-        // Показываем весь текст сразу
         if (currentIndex >= 0 && currentIndex < m_textDialogue.Length)
             displayText.text = m_textDialogue[currentIndex].text;
 
@@ -188,8 +218,6 @@ public class Dialogue : MonoBehaviour
     private void OnEntryComplete()
     {
         isEntryComplete = true;
-
-        // Показываем кнопку "далее"
         m_animatorDialogue.SetBool("endButton", true);
     }
 
