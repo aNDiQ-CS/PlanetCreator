@@ -1,25 +1,15 @@
-﻿using UnityEngine;
-
-namespace Infrastructure.States
+﻿namespace Infrastructure.States
 {
-    public class MiniGameState : MonoBehaviour, IState
+    public class MiniGameState : IState
     {
-        private StateMachine m_stateMachine;
-
-        public MiniGameState(StateMachine stateMachine)
-        {
-            m_stateMachine = stateMachine;
-        }
-
         public void Enter()
         {
-
+            // TODO: инициализация мини-игры
         }
 
         public void Exit()
         {
-            m_stateMachine.ChangeState<DialogState>();
-            m_stateMachine.ChangeState<GameExitState>();
+            // TODO: очистка мини-игры
         }
     }
 }
