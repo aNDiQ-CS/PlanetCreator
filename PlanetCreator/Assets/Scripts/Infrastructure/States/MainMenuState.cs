@@ -1,28 +1,26 @@
-﻿using Cinemachine;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Infrastructure.States
 {
-    public class MainMenuState : MonoBehaviour, IState
+    public class MainMenuState : IState
     {
-        [SerializeField] private CinemachineVirtualCamera m_camera;
-        [SerializeField] private GameObject m_UIPanel;
+        private readonly GameObject m_uiPanel;
 
-        private StateMachine m_stateMachine;
-
-        public MainMenuState(StateMachine stateMachine)
+        public MainMenuState(GameObject uiPanel)
         {
-            m_stateMachine = stateMachine;
+            m_uiPanel = uiPanel;
         }
 
         public void Enter()
         {
-
+            if (m_uiPanel != null)
+                m_uiPanel.SetActive(true);
         }
 
         public void Exit()
         {
-            m_stateMachine.ChangeState<GameEntryState>();
+            if (m_uiPanel != null)
+                m_uiPanel.SetActive(false);
         }
     }
 }

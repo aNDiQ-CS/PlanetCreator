@@ -1,24 +1,15 @@
-﻿using UnityEngine;
-
-namespace Infrastructure.States
+﻿namespace Infrastructure.States
 {
-    public class GameEntryState : MonoBehaviour, IState
+    public class GameEntryState : IState
     {
-        private StateMachine m_stateMachine;
-
-        public GameEntryState(StateMachine stateMachine)
-        {
-            m_stateMachine = stateMachine;
-        }
-
         public void Enter()
         {
-
+            // TODO: загрузка ресурсов уровня
         }
 
         public void Exit()
         {
-            m_stateMachine.ChangeState<DialogState>();
+            // TODO: очистка
         }
     }
 }

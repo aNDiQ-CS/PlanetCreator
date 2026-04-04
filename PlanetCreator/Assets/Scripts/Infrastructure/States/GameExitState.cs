@@ -1,24 +1,15 @@
-﻿using UnityEngine;
-
-namespace Infrastructure.States
+﻿namespace Infrastructure.States
 {
-    public class GameExitState : MonoBehaviour, IState
+    public class GameExitState : IState
     {
-        private StateMachine m_stateMachine;
-
-        public GameExitState(StateMachine stateMachine)
-        {
-            m_stateMachine = stateMachine;
-        }
-
         public void Enter()
         {
-
+            // TODO: сохранение, финальный экран
         }
 
         public void Exit()
         {
-            m_stateMachine.ChangeState<MainMenuState>();
+            // TODO: очистка
         }
     }
 }

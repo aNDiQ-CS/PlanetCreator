@@ -2,23 +2,40 @@
 
 namespace Infrastructure.States
 {
-    public class DialogState : MonoBehaviour, IState
+    public class DialogState : IState
     {
-        private StateMachine m_stateMachine;        
-        private GameObject m_dialog;
+        private readonly StateMachine m_stateMachine;
+        private readonly GameObject m_dialogObject;
+        private readonly Dialogue m_dialogue;
 
-        public DialogState(StateMachine stateMachine, GameObject dialog)
+        public DialogState(StateMachine stateMachine, GameObject dialogObject)
         {
             m_stateMachine = stateMachine;
-            m_dialog = dialog;
+            m_dialogObject = dialogObject;
+
+            // Dialogue — MonoBehaviour на том же объекте
+            m_dialogue = dialogObject.GetComponent<Dialogue>();
         }
 
         public void Enter()
         {
-            m_dialog.SetActive(true);
+            if (m_dialogue != null)
+                m_dialogue.DialogueFinished += OnDialogueFinished;
+
+            if (m_dialogObject != null)
+                m_dialogObject.SetActive(true);
         }
 
         public void Exit()
+        {
+            if (m_dialogue != null)
+                m_dialogue.DialogueFinished -= OnDialogueFinished;
+
+            if (m_dialogObject != null)
+                m_dialogObject.SetActive(false);
+        }
+
+        private void OnDialogueFinished()
         {
             m_stateMachine.ChangeState<MiniGameState>();
         }

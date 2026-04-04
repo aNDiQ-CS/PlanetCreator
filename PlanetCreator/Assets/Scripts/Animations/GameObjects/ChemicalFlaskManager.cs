@@ -1,14 +1,15 @@
-using UnityEngine;
+﻿using UnityEngine;
 using Planets;
+using Infrastructure;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
-public class ChemicalFlaskManager : MonoBehaviour
+public class ChemicalFlaskManager : MonoBehaviour, IMiniGame
 {
     public static ChemicalFlaskManager Instance { get; private set; }
 
-    [System.Serializable]
+    [Serializable]
     public class FlaskPrefab
     {
         public ChemicalType type;
@@ -29,6 +30,35 @@ public class ChemicalFlaskManager : MonoBehaviour
     public bool spawnInCircle = true;
     public float circleRadius = 2f;
 
+    [Header("Win Condition")]
+    [Tooltip("Сколько колб нужно вылить для завершения мини-игры")]
+    [SerializeField] private int m_requiredFlasks = 3;
+
+    // ─────────────────── IMiniGame ───────────────────
+
+    public event Action MiniGameCompleted;
+
+    private int m_flasksPoured;
+    private bool m_isGameActive;
+
+    public void StartGame()
+    {
+        m_flasksPoured = 0;
+        m_isGameActive = true;
+
+        ClearAllFlasks();
+        CalculateSpawnPositions();
+        SpawnAllFlasks();
+    }
+
+    public void StopGame()
+    {
+        m_isGameActive = false;
+        ClearAllFlasks();
+    }
+
+    // ─────────────────── Internal ───────────────────
+
     private Dictionary<ChemicalType, Queue<GameObject>> activeFlasks = new Dictionary<ChemicalType, Queue<GameObject>>();
     private Dictionary<ChemicalType, float> lastSpawnTime = new Dictionary<ChemicalType, float>();
     private List<Vector3> spawnPositions = new List<Vector3>();
@@ -36,16 +66,17 @@ public class ChemicalFlaskManager : MonoBehaviour
     void Awake()
     {
         if (Instance == null)
-        {
             Instance = this;
-        }
         else
-        {
             Destroy(gameObject);
-        }
     }
 
     void Start()
+    {
+        InitializeFlaskTracking();
+    }
+
+    private void InitializeFlaskTracking()
     {
         foreach (var flaskPrefab in flaskPrefabs)
         {
@@ -55,9 +86,6 @@ public class ChemicalFlaskManager : MonoBehaviour
                 lastSpawnTime[flaskPrefab.type] = 0f;
             }
         }
-
-        CalculateSpawnPositions();
-        SpawnAllFlasks();
     }
 
     void CalculateSpawnPositions()
@@ -92,9 +120,9 @@ public class ChemicalFlaskManager : MonoBehaviour
         {
             var flaskPrefab = flaskPrefabs[i];
 
-            Vector3 spawnPosition = (i < spawnPositions.Count) ?
-                spawnPositions[i] :
-                spawnPoint.position + Vector3.up * spawnHeight;
+            Vector3 spawnPosition = (i < spawnPositions.Count)
+                ? spawnPositions[i]
+                : spawnPoint.position + Vector3.up * spawnHeight;
 
             Quaternion rotation = Quaternion.Euler(spawnRotation);
             GameObject newFlask = Instantiate(flaskPrefab.prefab, spawnPosition, rotation);
@@ -105,7 +133,7 @@ public class ChemicalFlaskManager : MonoBehaviour
             if (wobbleScript != null)
             {
                 wobbleScript.chemicalType = flaskPrefab.type;
-                wobbleScript.SetFillAmount(Random.Range(0.6f, 0.9f));
+                wobbleScript.SetFillAmount(UnityEngine.Random.Range(0.6f, 0.9f));
             }
 
             Rigidbody rb = newFlask.GetComponent<Rigidbody>();
@@ -114,25 +142,26 @@ public class ChemicalFlaskManager : MonoBehaviour
                 rb.isKinematic = false;
                 rb.useGravity = true;
 
-                Vector3 randomForce = new Vector3(
-                    Random.Range(-0.5f, 0.5f),
-                    Random.Range(0f, 1f),
-                    Random.Range(-0.5f, 0.5f)
-                );
-                rb.AddForce(randomForce, ForceMode.Impulse);
+                rb.AddForce(new Vector3(
+                    UnityEngine.Random.Range(-0.5f, 0.5f),
+                    UnityEngine.Random.Range(0f, 1f),
+                    UnityEngine.Random.Range(-0.5f, 0.5f)),
+                    ForceMode.Impulse);
 
-                Vector3 randomTorque = new Vector3(
-                    Random.Range(-5f, 5f),
-                    Random.Range(-5f, 5f),
-                    Random.Range(-5f, 5f)
-                );
-                rb.AddTorque(randomTorque, ForceMode.Impulse);
+                rb.AddTorque(new Vector3(
+                    UnityEngine.Random.Range(-5f, 5f),
+                    UnityEngine.Random.Range(-5f, 5f),
+                    UnityEngine.Random.Range(-5f, 5f)),
+                    ForceMode.Impulse);
             }
         }
     }
 
     public void RequestNewFlask(ChemicalType type)
     {
+        // Если игра завершена — не спавним новые колбы
+        if (!m_isGameActive) return;
+
         if (Time.time - lastSpawnTime[type] < respawnDelay)
         {
             Invoke(nameof(SpawnFlaskDelayed), respawnDelay);
@@ -144,6 +173,8 @@ public class ChemicalFlaskManager : MonoBehaviour
 
     void SpawnFlaskDelayed()
     {
+        if (!m_isGameActive) return;
+
         foreach (var flaskPrefab in flaskPrefabs)
         {
             if (activeFlasks[flaskPrefab.type].Count < maxFlasksPerType)
@@ -156,6 +187,8 @@ public class ChemicalFlaskManager : MonoBehaviour
 
     void SpawnFlask(ChemicalType type)
     {
+        if (!m_isGameActive) return;
+
         var flaskPrefab = flaskPrefabs.Find(fp => fp.type == type);
         if (flaskPrefab == null || flaskPrefab.prefab == null) return;
         if (activeFlasks[type].Count >= maxFlasksPerType) return;
@@ -172,7 +205,7 @@ public class ChemicalFlaskManager : MonoBehaviour
         if (wobbleScript != null)
         {
             wobbleScript.chemicalType = type;
-            wobbleScript.SetFillAmount(Random.Range(0.6f, 0.9f));
+            wobbleScript.SetFillAmount(UnityEngine.Random.Range(0.6f, 0.9f));
         }
 
         Rigidbody rb = newFlask.GetComponent<Rigidbody>();
@@ -181,12 +214,11 @@ public class ChemicalFlaskManager : MonoBehaviour
             rb.isKinematic = false;
             rb.useGravity = true;
 
-            Vector3 randomForce = new Vector3(
-                Random.Range(-0.3f, 0.3f),
-                Random.Range(0.5f, 1.5f),
-                Random.Range(-0.3f, 0.3f)
-            );
-            rb.AddForce(randomForce, ForceMode.Impulse);
+            rb.AddForce(new Vector3(
+                UnityEngine.Random.Range(-0.3f, 0.3f),
+                UnityEngine.Random.Range(0.5f, 1.5f),
+                UnityEngine.Random.Range(-0.3f, 0.3f)),
+                ForceMode.Impulse);
         }
     }
 
@@ -195,12 +227,10 @@ public class ChemicalFlaskManager : MonoBehaviour
         int typeIndex = flaskPrefabs.FindIndex(fp => fp.type == type);
 
         if (typeIndex >= 0 && typeIndex < spawnPositions.Count)
-        {
             return spawnPositions[typeIndex];
-        }
 
         return spawnPoint.position + Vector3.up * spawnHeight +
-               new Vector3(Random.Range(-0.5f, 0.5f), 0, Random.Range(-0.5f, 0.5f));
+               new Vector3(UnityEngine.Random.Range(-0.5f, 0.5f), 0, UnityEngine.Random.Range(-0.5f, 0.5f));
     }
 
     public void OnFlaskDestroyed(GameObject flask, ChemicalType type)
@@ -214,13 +244,27 @@ public class ChemicalFlaskManager : MonoBehaviour
                 foreach (var item in queue)
                 {
                     if (item != flask)
-                    {
                         newQueue.Enqueue(item);
-                    }
                 }
                 activeFlasks[type] = newQueue;
             }
         }
+
+        // Считаем вылитую колбу
+        if (m_isGameActive)
+        {
+            m_flasksPoured++;
+            Debug.Log($"[ChemicalFlaskManager] Вылито колб: {m_flasksPoured}/{m_requiredFlasks}");
+
+            if (m_flasksPoured >= m_requiredFlasks)
+            {
+                m_isGameActive = false;
+                Debug.Log("[ChemicalFlaskManager] Мини-игра завершена!");
+                MiniGameCompleted?.Invoke();
+                return;
+            }
+        }
+
         RequestNewFlask(type);
     }
 
@@ -232,9 +276,7 @@ public class ChemicalFlaskManager : MonoBehaviour
             {
                 GameObject flask = kvp.Value.Dequeue();
                 if (flask != null)
-                {
                     Destroy(flask);
-                }
             }
         }
 
@@ -246,75 +288,47 @@ public class ChemicalFlaskManager : MonoBehaviour
 
     void OnDrawGizmos()
     {
-        if (spawnPoint != null)
+        if (spawnPoint == null) return;
+
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireCube(spawnPoint.position + Vector3.up * spawnHeight, Vector3.one * 0.3f);
+        Gizmos.DrawLine(spawnPoint.position, spawnPoint.position + Vector3.up * spawnHeight);
+
+        if (Application.isPlaying && spawnPositions.Count > 0)
         {
-            Gizmos.color = Color.green;
-            Gizmos.DrawWireCube(spawnPoint.position + Vector3.up * spawnHeight, Vector3.one * 0.3f);
-            Gizmos.DrawLine(spawnPoint.position, spawnPoint.position + Vector3.up * spawnHeight);
-
-            if (Application.isPlaying && spawnPositions.Count > 0)
+            Gizmos.color = Color.yellow;
+            for (int i = 0; i < spawnPositions.Count; i++)
             {
-                Gizmos.color = Color.yellow;
-                for (int i = 0; i < spawnPositions.Count; i++)
-                {
-                    Gizmos.DrawSphere(spawnPositions[i], 0.2f);
-
+                Gizmos.DrawSphere(spawnPositions[i], 0.2f);
 #if UNITY_EDITOR
-                    if (i < flaskPrefabs.Count)
-                    {
-                        UnityEditor.Handles.Label(spawnPositions[i] + Vector3.up * 0.3f,
-                            flaskPrefabs[i].type.ToString());
-                    }
+                if (i < flaskPrefabs.Count)
+                    UnityEditor.Handles.Label(spawnPositions[i] + Vector3.up * 0.3f, flaskPrefabs[i].type.ToString());
 #endif
-                }
-            }
-            else if (flaskPrefabs.Count > 0)
-            {
-                Gizmos.color = Color.blue;
-
-                if (spawnInCircle)
-                {
-                    int count = flaskPrefabs.Count;
-                    for (int i = 0; i < count; i++)
-                    {
-                        float angle = i * Mathf.PI * 2f / count;
-                        Vector3 position = spawnPoint.position +
-                            new Vector3(Mathf.Cos(angle) * circleRadius, spawnHeight, Mathf.Sin(angle) * circleRadius);
-                        Gizmos.DrawSphere(position, 0.15f);
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < flaskPrefabs.Count; i++)
-                    {
-                        Vector3 position = spawnPoint.position +
-                            new Vector3((i - flaskPrefabs.Count / 2f) * horizontalSpacing, spawnHeight, 0);
-                        Gizmos.DrawSphere(position, 0.15f);
-                    }
-                }
             }
         }
-    }
-
-    [ContextMenu("����������� ��� �����")]
-    void RecreateAllFlasks()
-    {
-        ClearAllFlasks();
-        SpawnAllFlasks();
-    }
-
-    [ContextMenu("�������� ����������")]
-    void ShowStats()
-    {
-        StringBuilder sb = new StringBuilder();
-        sb.AppendLine("[ChemicalFlaskManager] ����������:");
-        sb.AppendLine($"����� �����: {flaskPrefabs.Count}");
-
-        foreach (var kvp in activeFlasks)
+        else if (flaskPrefabs.Count > 0)
         {
-            sb.AppendLine($"  {kvp.Key}: {kvp.Value.Count} �������� ����");
+            Gizmos.color = Color.blue;
+            if (spawnInCircle)
+            {
+                int count = flaskPrefabs.Count;
+                for (int i = 0; i < count; i++)
+                {
+                    float angle = i * Mathf.PI * 2f / count;
+                    Vector3 position = spawnPoint.position +
+                        new Vector3(Mathf.Cos(angle) * circleRadius, spawnHeight, Mathf.Sin(angle) * circleRadius);
+                    Gizmos.DrawSphere(position, 0.15f);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < flaskPrefabs.Count; i++)
+                {
+                    Vector3 position = spawnPoint.position +
+                        new Vector3((i - flaskPrefabs.Count / 2f) * horizontalSpacing, spawnHeight, 0);
+                    Gizmos.DrawSphere(position, 0.15f);
+                }
+            }
         }
-
-        Debug.Log(sb.ToString());
     }
 }
