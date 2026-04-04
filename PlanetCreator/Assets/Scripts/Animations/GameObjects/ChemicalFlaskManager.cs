@@ -74,6 +74,7 @@ public class ChemicalFlaskManager : MonoBehaviour, IMiniGame
     void Start()
     {
         InitializeFlaskTracking();
+        StartGame();
     }
 
     private void InitializeFlaskTracking()
@@ -142,17 +143,17 @@ public class ChemicalFlaskManager : MonoBehaviour, IMiniGame
                 rb.isKinematic = false;
                 rb.useGravity = true;
 
-                rb.AddForce(new Vector3(
-                    UnityEngine.Random.Range(-0.5f, 0.5f),
-                    UnityEngine.Random.Range(0f, 1f),
-                    UnityEngine.Random.Range(-0.5f, 0.5f)),
-                    ForceMode.Impulse);
+                //rb.AddForce(new Vector3(
+                //    UnityEngine.Random.Range(-0.5f, 0.5f),
+                //    UnityEngine.Random.Range(0f, 1f),
+                //    UnityEngine.Random.Range(-0.5f, 0.5f)),
+                //    ForceMode.Impulse);
 
-                rb.AddTorque(new Vector3(
-                    UnityEngine.Random.Range(-5f, 5f),
-                    UnityEngine.Random.Range(-5f, 5f),
-                    UnityEngine.Random.Range(-5f, 5f)),
-                    ForceMode.Impulse);
+                //rb.AddTorque(new Vector3(
+                //    UnityEngine.Random.Range(-5f, 5f),
+                //    UnityEngine.Random.Range(-5f, 5f),
+                //    UnityEngine.Random.Range(-5f, 5f)),
+                //    ForceMode.Impulse);
             }
         }
     }

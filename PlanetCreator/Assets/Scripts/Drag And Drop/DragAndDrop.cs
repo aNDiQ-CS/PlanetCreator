@@ -1,135 +1,119 @@
-using UnityEngine;
+п»їusing UnityEngine;
 
-/// <summary>
-/// DragAndDrop — простой drag&drop с AddForce для мыши и touch.
-/// Исправлена ошибка типов: теперь touch позиция конвертируется в Vector3 с корректным z.
-/// Требования: объект должен иметь Collider и Rigidbody.
-/// </summary>
 [RequireComponent(typeof(Rigidbody), typeof(Collider))]
 public class DragAndDrop : MonoBehaviour
 {
-    [SerializeField] private float m_force = 500f;
+    [Header("Movement Settings")]
+    [SerializeField] private float m_followSpeed = 35f;
 
-    // Смещение между позицией курсора (screen) и экранной позицией центра объекта
-    private Vector3 m_mousePosition;
+    [Header("Auto Rotation Settings")]
+    [SerializeField] private float m_rotationSpeed = 20f;
+    [SerializeField] private float m_pourAngleZ = -110f;
+    [SerializeField] private float m_rayDistance = 15f; // РЈРІРµР»РёС‡РёР»Рё РґР»СЏ РЅР°РґРµР¶РЅРѕСЃС‚Рё
+    [SerializeField] private LayerMask m_containerLayer; // РЎР»РѕР№ РєРѕРЅС‚РµР№РЅРµСЂР°
+
     private Rigidbody m_rigidbody;
-
-    // Для touch: id пальца, который захватил объект. -1 — ничего не захвачено.
-    private int m_touchId = -1;
+    private bool m_isDragging = false;
+    private float m_zDistanceToCamera;
+    private Vector3 m_targetWorldPos;
 
     private void OnEnable()
     {
         m_rigidbody = GetComponent<Rigidbody>();
+        m_rigidbody.interpolation = RigidbodyInterpolation.Interpolate;
     }
-
-    private Vector3 GetMousePosition()
-    {
-        if (Camera.main == null)
-        {
-            Debug.LogError("DragAndDrop: Camera.main не найдена. Пометьте камеру тегом MainCamera.");
-            return Vector3.zero;
-        }
-        // возвращаем экранную позицию объекта (x,y) и z = расстояние до камеры (нужно для ScreenToWorldPoint)
-        return Camera.main.WorldToScreenPoint(transform.position);
-    }
-
-    #region Mouse handlers
-
-    private void OnMouseDown()
-    {
-        // Сохраняем смещение (чтобы позиция захвата была корректной)
-        m_mousePosition = Input.mousePosition - GetMousePosition();
-    }
-
-    private void OnMouseDrag()
-    {
-        if (Camera.main == null) return;
-
-        Vector3 screenPoint = (Vector3)Input.mousePosition - m_mousePosition; // ввод как Vector3 (z будет ноль, но m_mousePosition.z учитывает)
-        // Обеспечим корректный z: используем z из GetMousePosition()
-        screenPoint.z = GetMousePosition().z;
-        Vector3 cameraDrag = Camera.main.ScreenToWorldPoint(screenPoint);
-
-        m_rigidbody.AddForce((cameraDrag - transform.position) * m_force, ForceMode.Force);
-        m_rigidbody.velocity = Vector3.zero;
-    }
-
-    #endregion
-
-    #region Touch handlers
 
     private void Update()
     {
-        if (Input.touchCount == 0)
+        HandleInput();
+        HandleAutoRotation();
+    }
+
+    private void FixedUpdate()
+    {
+        if (m_isDragging)
         {
-            return;
-        }
-
-        // Обрабатываем все касания — нужен только тот, который захватил объект (m_touchId)
-        for (int i = 0; i < Input.touchCount; i++)
-        {
-            Touch t = Input.GetTouch(i);
-
-            switch (t.phase)
-            {
-                case TouchPhase.Began:
-                    TryBeginTouch(t);
-                    break;
-
-                case TouchPhase.Moved:
-                case TouchPhase.Stationary:
-                    if (m_touchId == t.fingerId)
-                        ContinueTouchDrag(t);
-                    break;
-
-                case TouchPhase.Ended:
-                case TouchPhase.Canceled:
-                    if (m_touchId == t.fingerId)
-                        EndTouchDrag();
-                    break;
-            }
+            // РџР»Р°РІРЅРѕРµ СЃР»РµРґРѕРІР°РЅРёРµ Р·Р° РєСѓСЂСЃРѕСЂРѕРј
+            transform.position = Vector3.Lerp(transform.position, m_targetWorldPos, Time.fixedDeltaTime * m_followSpeed);
         }
     }
 
-    private void TryBeginTouch(Touch t)
+    private void StartDragging()
     {
-        if (Camera.main == null) return;
+        m_isDragging = true;
+        m_zDistanceToCamera = Camera.main.WorldToScreenPoint(transform.position).z;
 
-        Ray ray = Camera.main.ScreenPointToRay(t.position);
-        if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity))
-        {
-            if (hit.collider != null)
-            {
-                // Начинаем drag только если касание попало в этот коллайдер (или в дочерний)
-                if (hit.collider.transform == this.transform || hit.collider.transform.IsChildOf(transform))
-                {
-                    m_touchId = t.fingerId;
-
-                    // ВАЖНО: корректно формируем Vector3 для экранной точки и заливаем туда z из GetMousePosition()
-                    Vector3 touchScreenPoint = new Vector3(t.position.x, t.position.y, GetMousePosition().z);
-                    m_mousePosition = touchScreenPoint - GetMousePosition();
-                }
-            }
-        }
-    }
-
-    private void ContinueTouchDrag(Touch t)
-    {
-        if (Camera.main == null) return;
-
-        // Здесь исправлён момент: формируем Vector3 с тем же z, который использовался при захвате
-        Vector3 touchScreenPoint = new Vector3(t.position.x, t.position.y, GetMousePosition().z);
-        Vector3 screenPoint = touchScreenPoint - m_mousePosition;
-        Vector3 cameraDrag = Camera.main.ScreenToWorldPoint(screenPoint);
-
-        m_rigidbody.AddForce((cameraDrag - transform.position) * m_force, ForceMode.Force);
+        // РћР±РЅСѓР»СЏРµРј С„РёР·РёРєСѓ Р”Рћ РІРєР»СЋС‡РµРЅРёСЏ РєРёРЅРµРјР°С‚РёРєРё
         m_rigidbody.velocity = Vector3.zero;
+        m_rigidbody.angularVelocity = Vector3.zero;
+
+        m_rigidbody.isKinematic = true;
+        m_rigidbody.useGravity = false;
+
+        UpdateTargetPosition();
     }
 
-    private void EndTouchDrag()
+    private void EndDragging()
     {
-        m_touchId = -1;
+        m_isDragging = false;
+        m_rigidbody.isKinematic = false;
+        m_rigidbody.useGravity = true;
+
+        // РћР±РЅСѓР»СЏРµРј С„РёР·РёРєСѓ РџРћРЎР›Р• РІС‹РєР»СЋС‡РµРЅРёСЏ РєРёРЅРµРјР°С‚РёРєРё (СѓР±РёСЂР°РµС‚ РѕС€РёР±РєРё)
+        m_rigidbody.velocity = Vector3.zero;
+        m_rigidbody.angularVelocity = Vector3.zero;
     }
 
-    #endregion
+    private void HandleInput()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out RaycastHit hit))
+            {
+                // РџСЂРѕРІРµСЂСЏРµРј РїРѕРїР°РґР°РЅРёРµ РІ РєРѕР»Р±Сѓ
+                if (hit.collider.transform == transform || hit.collider.transform.IsChildOf(transform))
+                    StartDragging();
+            }
+        }
+
+        if (m_isDragging)
+        {
+            UpdateTargetPosition();
+            if (Input.GetMouseButtonUp(0)) EndDragging();
+        }
+    }
+
+    private void UpdateTargetPosition()
+    {
+        Vector3 mousePoint = Input.mousePosition;
+        mousePoint.z = m_zDistanceToCamera;
+        m_targetWorldPos = Camera.main.ScreenToWorldPoint(mousePoint);
+    }
+
+    private void HandleAutoRotation()
+    {
+        Quaternion targetRotation = Quaternion.identity;
+
+        if (m_isDragging)
+        {
+            // РџСѓСЃРєР°РµРј Р»СѓС‡ СЃС‚СЂРѕРіРѕ РІРЅРёР·
+            Ray ray = new Ray(transform.position, Vector3.down);
+            RaycastHit hit;
+
+            // РџСЂРѕРІРµСЂРєР° РїРѕРїР°РґР°РЅРёСЏ СЃ РІРёР·СѓР°Р»РёР·Р°С†РёРµР№
+            if (Physics.Raycast(ray, out hit, m_rayDistance, m_containerLayer))
+            {
+                // Р•СЃР»Рё РїРѕРїР°Р»Рё РІ РѕР±СЉРµРєС‚ СЃРѕ СЃР»РѕРµРј РєРѕРЅС‚РµР№РЅРµСЂР°
+                Debug.DrawRay(transform.position, Vector3.down * m_rayDistance, Color.green);
+                targetRotation = Quaternion.Euler(0, 0, m_pourAngleZ);
+            }
+            else
+            {
+                Debug.DrawRay(transform.position, Vector3.down * m_rayDistance, Color.red);
+            }
+        }
+
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * m_rotationSpeed);
+    }
 }
