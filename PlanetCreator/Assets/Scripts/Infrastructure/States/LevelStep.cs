@@ -16,6 +16,9 @@ namespace Infrastructure
         public string label;
         public LevelStepType type;
 
+        [Range(0f, 10f)]
+        public float delayBeforeNext = 0f;
+
         public GameObject dialogObject;
         public GameObject miniGameObject;
 

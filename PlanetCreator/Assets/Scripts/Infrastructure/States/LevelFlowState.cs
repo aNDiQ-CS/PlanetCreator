@@ -11,7 +11,7 @@ namespace Infrastructure.States
         private int m_currentStepIndex;
         private Dialogue m_activeDialogue;
         private IMiniGame m_activeMiniGame;
-        private Coroutine m_animationCoroutine;
+        private Coroutine m_activeCoroutine;
 
         public LevelFlowState(StateMachine stateMachine, LevelSequence sequence)
         {
@@ -62,7 +62,7 @@ namespace Infrastructure.States
         // ─────────────────── Dialog ───────────────────
 
         private void ExecuteDialogStep(LevelStep step)
-        {            
+        {
             if (step.dialogObject == null)
             {
                 Debug.LogWarning($"[LevelFlow] Step {m_currentStepIndex} ({step.label}): dialogObject не назначен");
@@ -71,7 +71,6 @@ namespace Infrastructure.States
             }
 
             m_activeDialogue = step.dialogObject.GetComponent<Dialogue>();
-            Debug.LogWarning(m_activeDialogue);
 
             if (m_activeDialogue != null)
                 m_activeDialogue.DialogueFinished += OnDialogueFinished;
@@ -148,7 +147,7 @@ namespace Infrastructure.States
             if (!string.IsNullOrEmpty(step.animationTrigger))
                 step.characterAnimator.SetTrigger(step.animationTrigger);
 
-            m_animationCoroutine = m_stateMachine.StartCoroutine(WaitForAnimation(step));
+            m_activeCoroutine = m_stateMachine.StartCoroutine(WaitForAnimation(step));
         }
 
         private IEnumerator WaitForAnimation(LevelStep step)
@@ -158,13 +157,31 @@ namespace Infrastructure.States
             if (step.characterAnimator != null && !string.IsNullOrEmpty(step.idleBoolParam))
                 step.characterAnimator.SetBool(step.idleBoolParam, true);
 
-            m_animationCoroutine = null;
+            m_activeCoroutine = null;
             AdvanceToNextStep();
         }
 
         // ─────────────────── Flow control ───────────────────
 
         private void AdvanceToNextStep()
+        {
+            var currentStep = m_sequence.GetStep(m_currentStepIndex);
+            float delay = currentStep != null ? currentStep.delayBeforeNext : 0f;
+
+            if (delay > 0f)
+                m_activeCoroutine = m_stateMachine.StartCoroutine(AdvanceWithDelay(delay));
+            else
+                DoAdvance();
+        }
+
+        private IEnumerator AdvanceWithDelay(float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            m_activeCoroutine = null;
+            DoAdvance();
+        }
+
+        private void DoAdvance()
         {
             m_currentStepIndex++;
             ExecuteCurrentStep();
@@ -185,10 +202,10 @@ namespace Infrastructure.States
                 m_activeMiniGame = null;
             }
 
-            if (m_animationCoroutine != null)
+            if (m_activeCoroutine != null)
             {
-                m_stateMachine.StopCoroutine(m_animationCoroutine);
-                m_animationCoroutine = null;
+                m_stateMachine.StopCoroutine(m_activeCoroutine);
+                m_activeCoroutine = null;
             }
 
             if (m_sequence != null && m_currentStepIndex < m_sequence.StepCount)
