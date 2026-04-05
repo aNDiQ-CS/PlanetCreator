@@ -1,7 +1,7 @@
-п»їusing UnityEngine;
+using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody), typeof(Collider))]
-public class DragAndDrop : MonoBehaviour
+public class DragAndDropLegacy : MonoBehaviour
 {
     [Header("Movement Settings")]
     [SerializeField] private float m_followSpeed = 35f;
@@ -9,9 +9,10 @@ public class DragAndDrop : MonoBehaviour
     [Header("Auto Rotation Settings")]
     [SerializeField] private float m_rotationSpeed = 20f;
     [SerializeField] private float m_pourAngleZ = -110f;
+    [SerializeField] private float m_rayDistance = 15f; // Увеличили для надежности
+    [SerializeField] private LayerMask m_containerLayer; // Слой контейнера
 
     private Rigidbody m_rigidbody;
-    private Wobble m_wobble;
     private bool m_isDragging = false;
     private float m_zDistanceToCamera;
     private Vector3 m_targetWorldPos;
@@ -20,9 +21,6 @@ public class DragAndDrop : MonoBehaviour
     {
         m_rigidbody = GetComponent<Rigidbody>();
         m_rigidbody.interpolation = RigidbodyInterpolation.Interpolate;
-
-        // Wobble РЅР° РґРѕС‡РµСЂРЅРµРј РѕР±СЉРµРєС‚Рµ
-        m_wobble = GetComponentInChildren<Wobble>();
     }
 
     private void Update()
@@ -35,9 +33,8 @@ public class DragAndDrop : MonoBehaviour
     {
         if (m_isDragging)
         {
-            transform.position = Vector3.Lerp(
-                transform.position, m_targetWorldPos,
-                Time.fixedDeltaTime * m_followSpeed);
+            // Плавное следование за курсором
+            transform.position = Vector3.Lerp(transform.position, m_targetWorldPos, Time.fixedDeltaTime * m_followSpeed);
         }
     }
 
@@ -46,8 +43,10 @@ public class DragAndDrop : MonoBehaviour
         m_isDragging = true;
         m_zDistanceToCamera = Camera.main.WorldToScreenPoint(transform.position).z;
 
+        // Обнуляем физику ДО включения кинематики
         m_rigidbody.velocity = Vector3.zero;
         m_rigidbody.angularVelocity = Vector3.zero;
+
         m_rigidbody.isKinematic = true;
         m_rigidbody.useGravity = false;
 
@@ -59,6 +58,8 @@ public class DragAndDrop : MonoBehaviour
         m_isDragging = false;
         m_rigidbody.isKinematic = false;
         m_rigidbody.useGravity = true;
+
+        // Обнуляем физику ПОСЛЕ выключения кинематики (убирает ошибки)
         m_rigidbody.velocity = Vector3.zero;
         m_rigidbody.angularVelocity = Vector3.zero;
     }
@@ -70,6 +71,7 @@ public class DragAndDrop : MonoBehaviour
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
+                // Проверяем попадание в колбу
                 if (hit.collider.transform == transform || hit.collider.transform.IsChildOf(transform))
                     StartDragging();
             }
@@ -93,14 +95,25 @@ public class DragAndDrop : MonoBehaviour
     {
         Quaternion targetRotation = Quaternion.identity;
 
-        if (m_isDragging && m_wobble != null && m_wobble.IsInsidePourZone())
+        if (m_isDragging)
         {
-            // РљРѕР»Р±Р° РЅР°Рґ РєРѕРЅС‚РµР№РЅРµСЂРѕРј вЂ” РїРѕРІРѕСЂР°С‡РёРІР°РµРј РІ РїРѕР·РёС†РёСЋ РІС‹Р»РёРІР°РЅРёСЏ
-            targetRotation = Quaternion.Euler(0, 0, m_pourAngleZ);
+            // Пускаем луч строго вниз
+            Ray ray = new Ray(transform.position, Vector3.down);
+            RaycastHit hit;
+
+            // Проверка попадания с визуализацией
+            if (Physics.Raycast(ray, out hit, m_rayDistance, m_containerLayer))
+            {
+                // Если попали в объект со слоем контейнера
+                Debug.DrawRay(transform.position, Vector3.down * m_rayDistance, Color.green);
+                targetRotation = Quaternion.Euler(0, 0, m_pourAngleZ);
+            }
+            else
+            {
+                Debug.DrawRay(transform.position, Vector3.down * m_rayDistance, Color.red);
+            }
         }
 
-        transform.rotation = Quaternion.Slerp(
-            transform.rotation, targetRotation,
-            Time.deltaTime * m_rotationSpeed);
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * m_rotationSpeed);
     }
 }

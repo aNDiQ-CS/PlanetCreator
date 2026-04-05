@@ -1,6 +1,5 @@
 using UnityEngine;
 using Planets;
-using System.Collections.Generic;
 
 public class Wobble : MonoBehaviour
 {
@@ -22,11 +21,6 @@ public class Wobble : MonoBehaviour
     public float pourRate = 0.2f;
     public float minFillLevel = 0.1f;
     public float maxFillLevel = 0.9f;
-
-    [Header("Container Detection")]
-    public float raycastDistance = 2f;
-    public float detectionRadius = 0.2f;
-    public LayerMask containerLayerMask = -1;
 
     [Header("Pour Effects")]
     public ParticleSystem pourParticles;
@@ -55,34 +49,41 @@ public class Wobble : MonoBehaviour
 
     private GameObject parentObject;
     private MixingContainer targetContainer;
-    private Vector3 lastPourDirection;
     private bool materialInitialized = false;
+    private bool m_isInsidePourZone = false;
 
     void Start()
     {
-        parentObject = this.transform.parent.gameObject;
+        parentObject = transform.parent != null ? transform.parent.gameObject : gameObject;
         rend = GetComponent<Renderer>();
         wobblingMaterial = new Material(rend.sharedMaterial);
         rend.material = wobblingMaterial;
         materialInitialized = true;
         UpdateChemicalAppearance();
+
         if (neckPoint != null)
-        {
             neckLocalPosition = transform.InverseTransformPoint(neckPoint.position);
-        }
         else
-        {
             neckLocalPosition = Vector3.up * 0.5f;
-        }
+
         SetFillAmount(currentFillAmount);
+
         if (pourParticles != null)
         {
             pourParticles.Stop();
             var main = pourParticles.main;
             main.startColor = chemicalColor;
         }
+
         if (pourSound != null)
             pourSound.Stop();
+
+        // Добавляем PourTriggerRelay на родителя если его нет
+        if (parentObject != gameObject)
+        {
+            if (parentObject.GetComponent<PourTriggerRelay>() == null)
+                parentObject.AddComponent<PourTriggerRelay>();
+        }
     }
 
     private void Update()
@@ -116,6 +117,42 @@ public class Wobble : MonoBehaviour
         if (currentFillAmount <= minFillLevel + 0.01f && !isPouring && !isEmpty) EmptyAndDestroy();
     }
 
+    // ─────────────────── Trigger (вызывается из PourTriggerRelay) ───────────────────
+
+    public void OnPourZoneEnter(Collider other)
+    {
+        MixingContainer container = other.GetComponent<MixingContainer>();
+        if (container == null)
+            container = other.GetComponentInParent<MixingContainer>();
+
+        if (container != null)
+        {
+            m_isInsidePourZone = true;
+            targetContainer = container;
+            Debug.Log($"[Wobble] Вошла в зону контейнера: {other.gameObject.name}");
+        }
+    }
+
+    public void OnPourZoneExit(Collider other)
+    {
+        MixingContainer container = other.GetComponent<MixingContainer>();
+        if (container == null)
+            container = other.GetComponentInParent<MixingContainer>();
+
+        if (container != null)
+        {
+            m_isInsidePourZone = false;
+            targetContainer = null;
+
+            if (isPouring)
+                StopPouring();
+
+            Debug.Log($"[Wobble] Вышла из зоны контейнера");
+        }
+    }
+
+    // ─────────────────── Pour detection ───────────────────
+
     void CheckPouringCondition()
     {
         if (currentFillAmount <= minFillLevel)
@@ -124,25 +161,20 @@ public class Wobble : MonoBehaviour
             return;
         }
 
-        float tiltAngle = Vector3.Angle(Vector3.up, transform.up);
-        Vector3 neckWorldPos = transform.TransformPoint(neckLocalPosition);
-        Vector3 neckDirection = (neckWorldPos - transform.position).normalized;
-        float neckAngle = Vector3.Angle(neckDirection, -Vector3.up);
-        float liquidWorldHeight = CalculateLiquidWorldHeight();
-        float neckWorldHeight = neckWorldPos.y;
+        if (!m_isInsidePourZone)
+        {
+            if (isPouring)
+                StopPouring();
+            return;
+        }
 
-        bool shouldPour = tiltAngle > pourThreshold &&
-                         liquidWorldHeight > neckWorldHeight &&
-                         neckAngle < 70f;
+        float tiltAngle = Vector3.Angle(Vector3.up, transform.up);
+        bool shouldPour = tiltAngle > pourThreshold;
 
         if (shouldPour && !isPouring)
-        {
             StartPouring();
-        }
         else if (!shouldPour && isPouring)
-        {
             StopPouring();
-        }
 
         lastPourAngle = tiltAngle;
     }
@@ -150,8 +182,6 @@ public class Wobble : MonoBehaviour
     void StartPouring()
     {
         isPouring = true;
-        CalculatePourDirection();
-        FindTargetContainer();
 
         if (pourParticles != null)
         {
@@ -160,60 +190,10 @@ public class Wobble : MonoBehaviour
         }
 
         if (pourSound != null && !pourSound.isPlaying)
-        {
             pourSound.Play();
-        }
 
         wobbleAmountToAddX += MaxWobble * 0.5f;
         wobbleAmountToAddZ += MaxWobble * 0.5f;
-    }
-
-    void CalculatePourDirection()
-    {
-        Vector3 neckWorldPos = transform.TransformPoint(neckLocalPosition);
-        Vector3 baseDirection = -transform.up;
-        Vector3 tiltDirection = -transform.forward * 0.3f;
-        lastPourDirection = (baseDirection + tiltDirection).normalized;
-    }
-
-    void FindTargetContainer()
-    {
-        if (neckPoint == null) return;
-        Vector3 neckWorldPos = transform.TransformPoint(neckLocalPosition);
-
-        RaycastHit hit;
-        if (Physics.Raycast(neckWorldPos, lastPourDirection, out hit, raycastDistance, containerLayerMask))
-        {
-            MixingContainer container = hit.collider.GetComponent<MixingContainer>();
-            if (container != null)
-            {
-                targetContainer = container;
-                return;
-            }
-        }
-
-        Collider[] colliders = Physics.OverlapSphere(neckWorldPos, detectionRadius, containerLayerMask);
-        foreach (Collider col in colliders)
-        {
-            MixingContainer container = col.GetComponent<MixingContainer>();
-            if (container != null)
-            {
-                targetContainer = container;
-                return;
-            }
-        }
-
-        if (Physics.Raycast(neckWorldPos, Vector3.down, out hit, raycastDistance, containerLayerMask))
-        {
-            MixingContainer container = hit.collider.GetComponent<MixingContainer>();
-            if (container != null)
-            {
-                targetContainer = container;
-                return;
-            }
-        }
-
-        targetContainer = null;
     }
 
     void StopPouring()
@@ -221,17 +201,13 @@ public class Wobble : MonoBehaviour
         isPouring = false;
 
         if (pourParticles != null)
-        {
             pourParticles.Stop();
-        }
 
         if (pourSound != null)
-        {
             pourSound.Stop();
-        }
-
-        targetContainer = null;
     }
+
+    // ─────────────────── Pour logic ───────────────────
 
     void PourLiquid()
     {
@@ -255,14 +231,16 @@ public class Wobble : MonoBehaviour
 
         if (pourParticles != null && pourParticles.isPlaying)
         {
+            pourParticles.transform.position = transform.TransformPoint(neckLocalPosition);
+
             var velocityModule = pourParticles.velocityOverLifetime;
             velocityModule.enabled = true;
             velocityModule.space = ParticleSystemSimulationSpace.World;
 
             float particleSpeed = 2f * pourIntensity * viscosityFactor;
-            velocityModule.x = lastPourDirection.x * particleSpeed;
-            velocityModule.y = lastPourDirection.y * particleSpeed * 3f;
-            velocityModule.z = lastPourDirection.z * particleSpeed;
+            velocityModule.x = 0f;
+            velocityModule.y = -particleSpeed * 3f;
+            velocityModule.z = 0f;
 
             var emission = pourParticles.emission;
             emission.rateOverTime = 50f * pourIntensity * viscosityFactor;
@@ -275,14 +253,19 @@ public class Wobble : MonoBehaviour
         }
     }
 
+    // ─────────────────── Empty & destroy ───────────────────
+
     void EmptyAndDestroy()
     {
         isEmpty = true;
         Debug.Log($"[Wobble] Колба опустошена, тип: {chemicalType}");
+
         Rigidbody rb = GetComponent<Rigidbody>();
         if (rb != null) rb.isKinematic = true;
+
         Collider col = GetComponent<Collider>();
         if (col != null) col.enabled = false;
+
         StartCoroutine(FadeOutAndDestroy());
     }
 
@@ -291,20 +274,24 @@ public class Wobble : MonoBehaviour
         float fadeTime = 1f;
         float elapsed = 0f;
         Color startColor = wobblingMaterial.color;
+
         while (elapsed < fadeTime)
         {
             elapsed += Time.deltaTime;
-            float alpha = Mathf.Lerp(1f, 0f, elapsed / fadeTime);
+            float t = Easing.InOut(Mathf.Clamp01(elapsed / fadeTime));
+            float alpha = Mathf.Lerp(1f, 0f, t);
             wobblingMaterial.color = new Color(startColor.r, startColor.g, startColor.b, alpha);
             yield return null;
         }
+
         if (ChemicalFlaskManager.Instance != null)
-        {
             ChemicalFlaskManager.Instance.OnFlaskDestroyed(parentObject, chemicalType);
-        }
+
         yield return new WaitForSeconds(0.1f);
         Destroy(parentObject);
     }
+
+    // ─────────────────── Visual ───────────────────
 
     void UpdateChemicalAppearance()
     {
@@ -315,7 +302,10 @@ public class Wobble : MonoBehaviour
             wobblingMaterial.SetFloat("_Emission", 0.3f);
             wobblingMaterial.EnableKeyword("_EMISSION");
         }
-        else  wobblingMaterial.DisableKeyword("_EMISSION");
+        else
+        {
+            wobblingMaterial.DisableKeyword("_EMISSION");
+        }
     }
 
     void SetShaderColors(Material material, Color color)
@@ -323,15 +313,6 @@ public class Wobble : MonoBehaviour
         material.SetColor("_SideColor", color);
         material.SetColor("_TopColor", color);
         material.SetColor("_Color", color);
-    }
-
-    float CalculateLiquidWorldHeight()
-    {
-        float fillNormalized = (currentFillAmount - minFillLevel) / (maxFillLevel - minFillLevel);
-        Bounds bounds = rend.bounds;
-        float minY = bounds.min.y;
-        float maxY = bounds.max.y;
-        return minY + (fillNormalized * (maxY - minY));
     }
 
     void UpdateFillInShader()
@@ -346,31 +327,19 @@ public class Wobble : MonoBehaviour
         }
     }
 
+    // ─────────────────── Public API ───────────────────
+
     public void SetFillAmount(float amount)
     {
         currentFillAmount = Mathf.Clamp(amount, minFillLevel, maxFillLevel);
         UpdateFillInShader();
     }
 
-    public float GetFillAmount()
-    {
-        return currentFillAmount;
-    }
-
-    public bool IsPouring()
-    {
-        return isPouring;
-    }
-
-    public ChemicalType GetChemicalType()
-    {
-        return chemicalType;
-    }
-
-    public Color GetChemicalColor()
-    {
-        return chemicalColor;
-    }
+    public float GetFillAmount() => currentFillAmount;
+    public bool IsPouring() => isPouring;
+    public bool IsInsidePourZone() => m_isInsidePourZone;
+    public ChemicalType GetChemicalType() => chemicalType;
+    public Color GetChemicalColor() => chemicalColor;
 
     public void UpdateChemicalProperties(ChemicalType type, Color color, float density, float viscosity)
     {
@@ -379,35 +348,5 @@ public class Wobble : MonoBehaviour
         chemicalDensity = density;
         chemicalViscosity = viscosity;
         UpdateChemicalAppearance();
-    }
-
-    void OnDrawGizmosSelected()
-    {
-        if (neckPoint != null)
-        {
-            Vector3 neckWorldPos = transform.TransformPoint(neckLocalPosition);
-
-            Gizmos.color = Color.red;
-            Gizmos.DrawSphere(neckPoint.position, 0.01f);
-            Gizmos.DrawWireSphere(neckPoint.position, 0.02f);
-
-            Gizmos.color = Color.green;
-            Gizmos.DrawLine(neckWorldPos, neckWorldPos + lastPourDirection * raycastDistance);
-
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(neckWorldPos, detectionRadius);
-
-            Gizmos.color = Color.blue;
-            Gizmos.DrawLine(neckWorldPos, neckWorldPos + Vector3.down * raycastDistance);
-
-            if (Application.isPlaying)
-            {
-                float liquidHeight = CalculateLiquidWorldHeight();
-                Vector3 liquidPos = new Vector3(transform.position.x, liquidHeight, transform.position.z);
-                Gizmos.color = chemicalColor;
-                Gizmos.DrawWireSphere(liquidPos, 0.05f);
-                Gizmos.DrawLine(liquidPos, neckWorldPos);
-            }
-        }
     }
 }

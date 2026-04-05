@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 596184470255072303}
   - component: {fileID: 7652784485793983312}
   m_Layer: 0
-  m_Name: Beaker_Silicates
+  m_Name: Beaker_Light
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -218,8 +218,8 @@ MonoBehaviour:
   maxFillLevel: 0.55
   pourParticles: {fileID: 6358888477876608230}
   pourSound: {fileID: 0}
-  chemicalType: 0
-  chemicalColor: {r: 0.15566038, g: 0.15696247, b: 0.6226415, a: 1}
+  chemicalType: 4
+  chemicalColor: {r: 0, g: 0.9903989, b: 1, a: 0.6862745}
   chemicalDensity: 1
   chemicalViscosity: 1
   isFlammable: 0

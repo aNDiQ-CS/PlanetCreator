@@ -96,6 +96,7 @@ GameObject:
   - component: {fileID: 4070875166210221275}
   - component: {fileID: 9033960662888102027}
   - component: {fileID: 5366503060417687360}
+  - component: {fileID: 7112979911838283589}
   m_Layer: 0
   m_Name: Beaker_Radioactive
   m_TagString: Untagged
@@ -145,7 +146,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 0
+  m_Constraints: 2
   m_CollisionDetection: 0
 --- !u!65 &9033960662888102027
 BoxCollider:
@@ -183,10 +184,18 @@ MonoBehaviour:
   m_followSpeed: 35
   m_rotationSpeed: 10
   m_pourAngleZ: -110
-  m_rayDistance: 5
-  m_containerLayer:
-    serializedVersion: 2
-    m_Bits: 64
+--- !u!114 &7112979911838283589
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3425587632034422526}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a6d7d261a73d124699f5d6b597ae2ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &4929415620913679505
 GameObject:
   m_ObjectHideFlags: 0
@@ -5180,11 +5189,6 @@ MonoBehaviour:
   pourRate: 0.2
   minFillLevel: 0.5
   maxFillLevel: 0.55
-  raycastDistance: 2
-  detectionRadius: 0.2
-  containerLayerMask:
-    serializedVersion: 2
-    m_Bits: 64
   pourParticles: {fileID: 7805662745343113014}
   pourSound: {fileID: 0}
   chemicalType: 3
