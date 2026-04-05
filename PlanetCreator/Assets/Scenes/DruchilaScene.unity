@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.18359964, g: 0.22910888, b: 0.30539876, a: 1}
+  m_IndirectSpecularColor: {r: 0.18359935, g: 0.22910862, b: 0.30539787, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -3371,8 +3371,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 1
+  m_Sprite: {fileID: 21300000, guid: 5e8fe6e8076bb044c853883b6ef5360c, type: 3}
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -6461,6 +6461,7 @@ GameObject:
   - component: {fileID: 699378260}
   - component: {fileID: 699378259}
   - component: {fileID: 699378257}
+  - component: {fileID: 699378265}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -6632,6 +6633,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: -1.45, y: 90, z: -0.001}
+--- !u!114 &699378265
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 699378256}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d143cf309363a4547978f9645d7797f7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_cameraAnim: {fileID: 699378259}
 --- !u!1 &701828737
 GameObject:
   m_ObjectHideFlags: 0
@@ -13505,8 +13519,8 @@ Transform:
   m_GameObject: {fileID: 1216248412}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -4.6330004, y: 3.6035995, z: -2.8600006}
-  m_LocalScale: {x: 6.4958396, y: 4.753212, z: 0.14812441}
+  m_LocalPosition: {x: -3.0878, y: 3.6035995, z: -2.8600006}
+  m_LocalScale: {x: 3.4057686, y: 4.753212, z: 0.14812441}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 1771491937}
@@ -16881,8 +16895,8 @@ Transform:
   m_GameObject: {fileID: 1582547749}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -4.71, y: 1.71, z: 0.010000229}
-  m_LocalScale: {x: 0.67, y: 0.67, z: 0.67}
+  m_LocalPosition: {x: -4.71, y: 1.71, z: -6.4615}
+  m_LocalScale: {x: 0.67, y: 0.67, z: 1.964306}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1771491937}
@@ -18857,7 +18871,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1721542743}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.71164554, y: 0.03999363, z: 0.60236835, w: -0.3593239}
+  m_LocalRotation: {x: 0.7116455, y: 0.039993625, z: 0.6023683, w: -0.35932386}
   m_LocalPosition: {x: -0.0014840174, y: -0.0064693335, z: 0.008831218}
   m_LocalScale: {x: 1.0000002, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -20585,7 +20599,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 2030095615
+    rgba: 4278242559
   m_fontColor: {r: 1, g: 0.8, b: 0, a: 1}
   m_enableVertexGradient: 1
   m_colorMode: 3
