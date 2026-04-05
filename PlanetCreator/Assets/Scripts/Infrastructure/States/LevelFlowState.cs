@@ -11,6 +11,7 @@ namespace Infrastructure.States
         private int m_currentStepIndex;
         private Dialogue m_activeDialogue;
         private IMiniGame m_activeMiniGame;
+        private TimelineManager m_activeTimeline;
         private Coroutine m_activeCoroutine;
 
         public LevelFlowState(StateMachine stateMachine, LevelSequence sequence)
@@ -55,6 +56,12 @@ namespace Infrastructure.States
                     break;
                 case LevelStepType.Animation:
                     ExecuteAnimationStep(step);
+                    break;
+                case LevelStepType.CameraMove:
+                    ExecuteCameraMoveStep(step);
+                    break;
+                case LevelStepType.Cutscene:
+                    ExecuteCutsceneStep(step);
                     break;
             }
         }
@@ -161,6 +168,82 @@ namespace Infrastructure.States
             AdvanceToNextStep();
         }
 
+        // ─────────────────── Cutscene (Timeline) ───────────────────
+
+        private void ExecuteCutsceneStep(LevelStep step)
+        {
+            if (step.timelineManager == null)
+            {
+                Debug.LogWarning($"[LevelFlow] Step {m_currentStepIndex} ({step.label}): timelineManager не назначен");
+                AdvanceToNextStep();
+                return;
+            }
+
+            m_activeTimeline = step.timelineManager;
+            m_activeTimeline.CutsceneEnded += OnCutsceneStepEnded;
+
+            m_activeTimeline.gameObject.SetActive(true);
+            m_activeTimeline.PlayTimeline();
+        }
+
+        private void OnCutsceneStepEnded()
+        {
+            if (m_activeTimeline != null)
+            {
+                m_activeTimeline.CutsceneEnded -= OnCutsceneStepEnded;
+                m_activeTimeline = null;
+            }
+
+            AdvanceToNextStep();
+        }
+
+        // ─────────────────── CameraMove ───────────────────
+
+        private void ExecuteCameraMoveStep(LevelStep step)
+        {
+            if (step.cameraTarget == null)
+            {
+                Debug.LogWarning($"[LevelFlow] Step {m_currentStepIndex} ({step.label}): cameraTarget не назначен");
+                AdvanceToNextStep();
+                return;
+            }
+
+            Camera cam = Camera.main;
+            if (cam == null)
+            {
+                Debug.LogWarning("[LevelFlow] Camera.main не найдена");
+                AdvanceToNextStep();
+                return;
+            }
+
+            m_activeCoroutine = m_stateMachine.StartCoroutine(
+                MoveCamera(cam.transform, step.cameraTarget, step.cameraMoveDuration));
+        }
+
+        private IEnumerator MoveCamera(Transform cam, Transform target, float duration)
+        {
+            Vector3 startPos = cam.position;
+            Quaternion startRot = cam.rotation;
+            Vector3 endPos = target.position;
+            Quaternion endRot = target.rotation;
+            float elapsed = 0f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Easing.InOut(Mathf.Clamp01(elapsed / duration));
+                cam.position = Vector3.Lerp(startPos, endPos, t);
+                cam.rotation = Quaternion.Slerp(startRot, endRot, t);
+                yield return null;
+            }
+
+            cam.position = endPos;
+            cam.rotation = endRot;
+
+            m_activeCoroutine = null;
+            AdvanceToNextStep();
+        }
+
         // ─────────────────── Flow control ───────────────────
 
         private void AdvanceToNextStep()
@@ -200,6 +283,13 @@ namespace Infrastructure.States
                 m_activeMiniGame.MiniGameCompleted -= OnMiniGameCompleted;
                 m_activeMiniGame.StopGame();
                 m_activeMiniGame = null;
+            }
+
+            if (m_activeTimeline != null)
+            {
+                m_activeTimeline.CutsceneEnded -= OnCutsceneStepEnded;
+                m_activeTimeline.StopTimeline();
+                m_activeTimeline = null;
             }
 
             if (m_activeCoroutine != null)

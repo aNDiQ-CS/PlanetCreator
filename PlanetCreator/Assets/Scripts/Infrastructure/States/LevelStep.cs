@@ -7,7 +7,9 @@ namespace Infrastructure
     {
         Dialog,
         MiniGame,
-        Animation
+        Animation,
+        CameraMove,
+        Cutscene
     }
 
     [Serializable]
@@ -27,5 +29,11 @@ namespace Infrastructure
         public string idleBoolParam;
         [Range(0f, 30f)]
         public float animationDuration = 2f;
+
+        public Transform cameraTarget;
+        [Range(0.1f, 10f)]
+        public float cameraMoveDuration = 1.5f;
+
+        public TimelineManager timelineManager;
     }
 }

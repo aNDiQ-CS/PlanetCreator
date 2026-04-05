@@ -9,6 +9,7 @@ namespace Infrastructure.States
         private readonly TimelineManager m_timelineManager;
         private readonly TimeLineSkip m_timeLineSkip;
         private readonly GameObject m_cutsceneCanvas;
+        private readonly Animator m_cameraAnimator;
         private readonly float m_skipDelay;
 
         private Coroutine m_delayedTransition;
@@ -18,6 +19,7 @@ namespace Infrastructure.States
             TimelineManager timelineManager,
             TimeLineSkip timeLineSkip,
             GameObject cutsceneCanvas,
+            Animator cameraAnimator,
             float skipDelay = 5f)
         {
             m_stateMachine = stateMachine;
@@ -66,10 +68,10 @@ namespace Infrastructure.States
             {
                 m_timelineManager.StopTimeline();
                 m_timelineManager.gameObject.SetActive(false);
-            }
+            }            
 
             if (m_cutsceneCanvas != null)
-                m_cutsceneCanvas.SetActive(false);
+                m_cutsceneCanvas.SetActive(false);            
         }
 
         /// <summary>

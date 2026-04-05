@@ -21,6 +21,8 @@ public class LevelSequenceEditor : Editor
     private static readonly Color DialogColor = new Color(0.95f, 0.85f, 0.55f, 0.3f);
     private static readonly Color MiniGameColor = new Color(0.45f, 0.85f, 0.75f, 0.3f);
     private static readonly Color AnimationColor = new Color(0.85f, 0.55f, 0.45f, 0.3f);
+    private static readonly Color CameraMoveColor = new Color(0.55f, 0.65f, 0.95f, 0.3f);
+    private static readonly Color CutsceneColor = new Color(0.75f, 0.55f, 0.85f, 0.3f);
 
     private void OnEnable()
     {
@@ -54,6 +56,8 @@ public class LevelSequenceEditor : Editor
             LevelStepType.Dialog => DialogColor,
             LevelStepType.MiniGame => MiniGameColor,
             LevelStepType.Animation => AnimationColor,
+            LevelStepType.CameraMove => CameraMoveColor,
+            LevelStepType.Cutscene => CutsceneColor,
             _ => Color.clear
         };
         if (active) c.a += 0.15f;
@@ -83,6 +87,12 @@ public class LevelSequenceEditor : Editor
             case LevelStepType.Animation:
                 h += (OBJ_ROW + SPACING) * 4;
                 break;
+            case LevelStepType.CameraMove:
+                h += (OBJ_ROW + SPACING) * 2;
+                break;
+            case LevelStepType.Cutscene:
+                h += OBJ_ROW + SPACING;
+                break;
         }
 
         h += OBJ_ROW + SPACING;       // delayBeforeNext
@@ -106,6 +116,8 @@ public class LevelSequenceEditor : Editor
             LevelStepType.Dialog => "[Dialog]",
             LevelStepType.MiniGame => "[MiniGame]",
             LevelStepType.Animation => "[Animation]",
+            LevelStepType.CameraMove => "[CameraMove]",
+            LevelStepType.Cutscene => "[Cutscene]",
             _ => ""
         };
 
@@ -134,6 +146,16 @@ public class LevelSequenceEditor : Editor
                     el.FindPropertyRelative("idleBoolParam"), new GUIContent("Idle параметр"));
                 EditorGUI.PropertyField(Row(ref y, OBJ_ROW),
                     el.FindPropertyRelative("animationDuration"), new GUIContent("Длительность"));
+                break;
+            case LevelStepType.CameraMove:
+                EditorGUI.PropertyField(Row(ref y, OBJ_ROW),
+                    el.FindPropertyRelative("cameraTarget"), new GUIContent("Целевая позиция"));
+                EditorGUI.PropertyField(Row(ref y, OBJ_ROW),
+                    el.FindPropertyRelative("cameraMoveDuration"), new GUIContent("Длительность"));
+                break;
+            case LevelStepType.Cutscene:
+                EditorGUI.PropertyField(Row(ref y, OBJ_ROW),
+                    el.FindPropertyRelative("timelineManager"), new GUIContent("Timeline Manager"));
                 break;
         }
 

@@ -15,6 +15,7 @@ namespace Infrastructure
         [SerializeField] private TimelineManager m_timelineManager;
         [SerializeField] private TimeLineSkip m_timeLineSkip;
         [SerializeField] private GameObject m_cutsceneCanvas;
+        [SerializeField] private Animator m_cameraAnimator;
         [SerializeField][Range(0f, 15f)] private float m_skipDelay = 5f;
 
         [Header("Level")]
@@ -24,7 +25,7 @@ namespace Infrastructure
         {
             m_stateMachine.Initialize(
                 new MainMenuState(m_mainMenuPanel),
-                new CutsceneState(m_stateMachine, m_timelineManager, m_timeLineSkip, m_cutsceneCanvas, m_skipDelay),
+                new CutsceneState(m_stateMachine, m_timelineManager, m_timeLineSkip, m_cutsceneCanvas, m_cameraAnimator, m_skipDelay),
                 new LevelFlowState(m_stateMachine, m_levelSequence),
                 new GameEntryState(),
                 new GameExitState());

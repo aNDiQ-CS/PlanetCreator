@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.18359935, g: 0.22910862, b: 0.30539787, a: 1}
+  m_IndirectSpecularColor: {r: 0.18359964, g: 0.22910888, b: 0.30539876, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -2452,7 +2452,8 @@ MonoBehaviour:
   m_timelineManager: {fileID: 615232331}
   m_timeLineSkip: {fileID: 1045380020}
   m_cutsceneCanvas: {fileID: 1164181824}
-  m_skipDelay: 5
+  m_cameraAnimator: {fileID: 699378259}
+  m_skipDelay: 3
   m_levelSequence: {fileID: 2109325671}
 --- !u!1 &315035043
 GameObject:
@@ -2486,6 +2487,37 @@ Transform:
   - {fileID: 1528992210}
   m_Father: {fileID: 1630962941}
   m_LocalEulerAnglesHint: {x: 8.670175, y: -0.00040220842, z: -8.530878}
+--- !u!1 &320695965
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 320695966}
+  m_Layer: 0
+  m_Name: NewCameraPos
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &320695966
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 320695965}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -6.5570993, y: 2.8849235, z: -12.11}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &325192542
 GameObject:
   m_ObjectHideFlags: 0
@@ -2889,12 +2921,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 888885513}
   m_LocalEulerAnglesHint: {x: -3.8633556, y: 180, z: -142.56}
---- !u!4 &378360745 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 5792039318188477145, guid: d05acf1a2a3c8ca4a81e4552cffee55e,
-    type: 3}
-  m_PrefabInstance: {fileID: 1934475987}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &381364603 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2648845100511187439, guid: c8c57c5ed791e0c42beb5a63cabda791,
@@ -9425,19 +9451,13 @@ MonoBehaviour:
   - type: 3
     prefab: {fileID: 3425587632034422526, guid: e4ef5da6b371ace46b59c4f3fda627a6,
       type: 3}
-    isActive: 0
   - type: 0
     prefab: {fileID: 2394422618581097733, guid: c6657ef6d850edc42a83bf022256f716,
       type: 3}
-    isActive: 0
-  spawnPoint: {fileID: 378360745}
-  spawnHeight: 1
+  spawnPoints: []
   maxFlasksPerType: 1
   respawnDelay: 1.5
   spawnRotation: {x: 0, y: 0, z: 0}
-  horizontalSpacing: 1.5
-  spawnInCircle: 1
-  circleRadius: 2
   m_requiredFlasks: 3
 --- !u!1 &1013996180
 GameObject:
@@ -20565,7 +20585,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4278242559
+    rgba: 2030095615
   m_fontColor: {r: 1, g: 0.8, b: 0, a: 1}
   m_enableVertexGradient: 1
   m_colorMode: 3
@@ -23692,20 +23712,52 @@ MonoBehaviour:
   m_steps:
   - label: Dialog1
     type: 0
+    delayBeforeNext: 0
     dialogObject: {fileID: 1069665942}
     miniGameObject: {fileID: 0}
     characterAnimator: {fileID: 0}
     animationTrigger: 
     idleBoolParam: 
     animationDuration: 0
+    cameraTarget: {fileID: 0}
+    cameraMoveDuration: 1.5
+    timelineManager: {fileID: 0}
   - label: Kolbochki
-    type: 1
+    type: 4
+    delayBeforeNext: 0
     dialogObject: {fileID: 999387292}
     miniGameObject: {fileID: 999387292}
     characterAnimator: {fileID: 0}
     animationTrigger: 
     idleBoolParam: 
     animationDuration: 0
+    cameraTarget: {fileID: 0}
+    cameraMoveDuration: 1.5
+    timelineManager: {fileID: 1470417019}
+  - label: Kolbochki
+    type: 3
+    delayBeforeNext: 0
+    dialogObject: {fileID: 999387292}
+    miniGameObject: {fileID: 999387292}
+    characterAnimator: {fileID: 0}
+    animationTrigger: 
+    idleBoolParam: 
+    animationDuration: 0
+    cameraTarget: {fileID: 320695966}
+    cameraMoveDuration: 1.5
+    timelineManager: {fileID: 0}
+  - label: Kolbochki
+    type: 1
+    delayBeforeNext: 0
+    dialogObject: {fileID: 999387292}
+    miniGameObject: {fileID: 999387292}
+    characterAnimator: {fileID: 0}
+    animationTrigger: 
+    idleBoolParam: 
+    animationDuration: 0
+    cameraTarget: {fileID: 0}
+    cameraMoveDuration: 1.5
+    timelineManager: {fileID: 0}
 --- !u!1 &2113314159
 GameObject:
   m_ObjectHideFlags: 0
@@ -24058,3 +24110,4 @@ SceneRoots:
   - {fileID: 1468371458}
   - {fileID: 1093327513}
   - {fileID: 1470417020}
+  - {fileID: 320695966}
