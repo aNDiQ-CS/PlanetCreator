@@ -85,6 +85,7 @@ public class LevelSequenceEditor : Editor
                 break;
         }
 
+        h += OBJ_ROW + SPACING;       // delayBeforeNext
         h += BOTTOM_PAD;
         return h;
     }
@@ -135,6 +136,11 @@ public class LevelSequenceEditor : Editor
                     el.FindPropertyRelative("animationDuration"), new GUIContent("Длительность"));
                 break;
         }
+
+        // Задержка перед следующим шагом (для всех типов)
+        y += SECTION_GAP;
+        EditorGUI.PropertyField(Row(ref y, OBJ_ROW),
+            el.FindPropertyRelative("delayBeforeNext"), new GUIContent("Задержка (сек)"));
 
         Rect Row(ref float cy, float h)
         {
