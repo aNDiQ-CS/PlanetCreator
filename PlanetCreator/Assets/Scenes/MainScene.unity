@@ -10164,7 +10164,6 @@ Transform:
   - {fileID: 1323448121}
   - {fileID: 1553290312}
   - {fileID: 999387293}
-  - {fileID: 1673690772}
   - {fileID: 1362888413}
   - {fileID: 442060833}
   - {fileID: 109244241}
@@ -11358,9 +11357,9 @@ RectTransform:
   - {fileID: 840621393}
   m_Father: {fileID: 2113314160}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 1}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -100, y: -100}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 100, y: -100}
   m_SizeDelta: {x: 150, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &962153914
@@ -11451,7 +11450,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 8e5f02fb04a6cca4588b95516267b2ec, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 8af7c3ffa25bd724c9f81075fb9a494d, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -22984,8 +22983,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1673690771}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -6.4112167, y: -2.28, z: -8.525887}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.0112166405, y: 1.9699998, z: 0.31617165}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -22997,7 +22996,7 @@ Transform:
   - {fileID: 836103043}
   - {fileID: 467410612}
   - {fileID: 1825763179}
-  m_Father: {fileID: 863788369}
+  m_Father: {fileID: 999387293}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1675577797 stripped
 GameObject:
@@ -27087,6 +27086,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 853198008}
+    - targetCorrespondingSourceObject: {fileID: 5173176572662981764, guid: d05acf1a2a3c8ca4a81e4552cffee55e,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1673690772}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 7371105639805811240, guid: d05acf1a2a3c8ca4a81e4552cffee55e,
         type: 3}
