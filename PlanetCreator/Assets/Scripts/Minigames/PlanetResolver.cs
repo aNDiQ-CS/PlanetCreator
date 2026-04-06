@@ -44,6 +44,11 @@ public class PlanetResolver : MonoBehaviour, IMiniGame
     [SerializeField] private float m_spawnScale = 1f;
     [SerializeField] private float m_appearDuration = 1.5f;
 
+    [Header("Satellites & Rings")]
+    [SerializeField] private GameObject m_satellitePrefab;
+    [SerializeField] private GameObject m_ringsPrefab;
+    [SerializeField] private float m_orbitRadius = 3f;
+
     [Header("Chemical Data")]
     [SerializeField] private MixingContainer m_mixingContainer;
 
@@ -195,6 +200,85 @@ public class PlanetResolver : MonoBehaviour, IMiniGame
         {
             elapsed += Time.deltaTime;
             float t = Easing.InOut(Mathf.Clamp01(elapsed / m_appearDuration));
+            tr.localScale = targetScale * t;
+            yield return null;
+        }
+
+        tr.localScale = targetScale;
+
+        // Спавним спутники или кольца по результатам мини-игры
+        var data = PlanetBuildData.Instance;
+        if (data != null)
+            SpawnSatellitesOrRings(data.satellites, tr);
+    }
+
+    private void SpawnSatellitesOrRings(SatellitesOrRings choice, Transform planetTransform)
+    {
+        switch (choice)
+        {
+            case SatellitesOrRings.OneSatellite:
+                SpawnSatellites(1, planetTransform);
+                break;
+
+            case SatellitesOrRings.ThreeSatellites:
+                SpawnSatellites(3, planetTransform);
+                break;
+
+            case SatellitesOrRings.Rings:
+                SpawnRings(planetTransform);
+                break;
+
+            case SatellitesOrRings.None:
+            default:
+                break;
+        }
+    }
+
+    private void SpawnSatellites(int count, Transform planetTransform)
+    {
+        if (m_satellitePrefab == null) return;
+
+        for (int i = 0; i < count; i++)
+        {
+            GameObject satellite = Instantiate(m_satellitePrefab, planetTransform);
+
+            float angle = i * (360f / count) * Mathf.Deg2Rad;
+            satellite.transform.localPosition = new Vector3(
+                Mathf.Cos(angle) * m_orbitRadius,
+                0f,
+                Mathf.Sin(angle) * m_orbitRadius);
+
+            if (satellite.GetComponent<OrbitRotation>() == null)
+                satellite.AddComponent<OrbitRotation>();
+
+            // Анимация появления
+            StartCoroutine(AnimateScaleIn(satellite.transform, 0.5f, i * 0.2f));
+        }
+    }
+
+    private void SpawnRings(Transform planetTransform)
+    {
+        if (m_ringsPrefab == null) return;
+
+        GameObject rings = Instantiate(m_ringsPrefab, planetTransform);
+        rings.transform.localPosition = Vector3.zero;
+
+        StartCoroutine(AnimateScaleIn(rings.transform, 0.8f, 0f));
+    }
+
+    private IEnumerator AnimateScaleIn(Transform tr, float duration, float delay)
+    {
+        if (delay > 0f)
+            yield return new WaitForSeconds(delay);
+
+        Vector3 targetScale = tr.localScale;
+        tr.localScale = Vector3.zero;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Easing.InOut(Mathf.Clamp01(elapsed / duration));
             tr.localScale = targetScale * t;
             yield return null;
         }
