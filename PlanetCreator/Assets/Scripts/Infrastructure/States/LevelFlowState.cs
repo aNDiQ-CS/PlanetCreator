@@ -7,6 +7,7 @@ namespace Infrastructure.States
     {
         private readonly StateMachine m_stateMachine;
         private readonly LevelSequence m_sequence;
+        private readonly AudioSource m_sound;
 
         private int m_currentStepIndex;
         private Dialogue m_activeDialogue;
@@ -14,14 +15,16 @@ namespace Infrastructure.States
         private TimelineManager m_activeTimeline;
         private Coroutine m_activeCoroutine;
 
-        public LevelFlowState(StateMachine stateMachine, LevelSequence sequence)
+        public LevelFlowState(StateMachine stateMachine, LevelSequence sequence, AudioSource sound)
         {
             m_stateMachine = stateMachine;
             m_sequence = sequence;
+            m_sound = sound;
         }
 
         public void Enter()
         {
+            m_sound.Play();
             m_currentStepIndex = 0;
             ExecuteCurrentStep();
         }

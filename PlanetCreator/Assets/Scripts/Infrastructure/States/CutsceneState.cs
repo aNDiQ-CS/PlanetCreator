@@ -10,6 +10,7 @@ namespace Infrastructure.States
         private readonly TimeLineSkip m_timeLineSkip;
         private readonly GameObject m_cutsceneCanvas;
         private readonly Animator m_cameraAnimator;
+        private readonly AudioSource m_audioSource;
         private readonly float m_skipDelay;
 
         private Coroutine m_delayedTransition;
@@ -20,6 +21,7 @@ namespace Infrastructure.States
             TimeLineSkip timeLineSkip,
             GameObject cutsceneCanvas,
             Animator cameraAnimator,
+            AudioSource audioSource,
             float skipDelay = 5f)
         {
             m_stateMachine = stateMachine;
@@ -27,6 +29,7 @@ namespace Infrastructure.States
             m_timeLineSkip = timeLineSkip;
             m_cutsceneCanvas = cutsceneCanvas;
             m_skipDelay = skipDelay;
+            m_audioSource = audioSource;
         }
 
         public void Enter()
@@ -71,7 +74,10 @@ namespace Infrastructure.States
             }            
 
             if (m_cutsceneCanvas != null)
-                m_cutsceneCanvas.SetActive(false);            
+                m_cutsceneCanvas.SetActive(false);    
+            
+            if (m_audioSource != null)
+                m_audioSource.gameObject.SetActive(false);
         }
 
         /// <summary>
