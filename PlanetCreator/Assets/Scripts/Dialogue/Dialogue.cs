@@ -20,7 +20,6 @@ public class Dialogue : MonoBehaviour
     [SerializeField] private Animator m_animatorDialogue;
 
     [Header("Settings")]
-    [SerializeField] private float typingSpeed = 0.05f;
     [SerializeField] private Camera worldCamera;
 
     [Header("Delay")]
@@ -29,14 +28,9 @@ public class Dialogue : MonoBehaviour
     [Header("Dialogue Data")]
     [SerializeField] private DialogueEntry[] m_textDialogue;
 
-    /// <summary>
-    /// Вызывается когда все реплики проиграны.
-    /// DialogState подписывается на это событие для перехода в MiniGameState.
-    /// </summary>
     public event Action DialogueFinished;
 
     private Canvas m_canvas;
-    private Coroutine typingRoutine;
     private Coroutine delayRoutine;
     private int currentIndex;
     private bool isDialogueActive;
@@ -49,10 +43,7 @@ public class Dialogue : MonoBehaviour
 
     private void OnEnable()
     {
-        // World Space Canvas требует Event Camera для обработки кликов.
-        // Без неё кнопки не работают.
         EnsureEventCamera();
-
         delayRoutine = StartCoroutine(StartWithDelay());
     }
 
@@ -75,14 +66,11 @@ public class Dialogue : MonoBehaviour
         }
     }
 
-    // ─────────────────── Camera fix ───────────────────
-
     private void EnsureEventCamera()
     {
         if (worldCamera == null)
             worldCamera = Camera.main;
 
-        // World Space Canvas (renderMode == 2) без камеры не принимает ввод
         if (m_canvas != null
             && m_canvas.renderMode == RenderMode.WorldSpace
             && m_canvas.worldCamera == null)
@@ -90,8 +78,6 @@ public class Dialogue : MonoBehaviour
             m_canvas.worldCamera = worldCamera;
         }
     }
-
-    // ─────────────────── Lifecycle ───────────────────
 
     private IEnumerator StartWithDelay()
     {
@@ -120,37 +106,46 @@ public class Dialogue : MonoBehaviour
         ShowCurrentEntry();
     }
 
-    /// <summary>
-    /// Привязать к кнопке "Далее" в Inspector:
-    /// Button.OnClick → Dialogue.ShowNextEntry
-    ///
-    /// Первое нажатие во время печати — показать текст целиком.
-    /// Нажатие после завершения реплики — следующая реплика.
-    /// После последней реплики — завершение диалога → переход в мини-игру.
-    /// </summary>
     public void ShowNextEntry()
     {
         if (!isDialogueActive) return;
 
-        // Текст ещё печатается — показать сразу целиком
         if (!isEntryComplete)
         {
-            SkipTyping();
+            OnEntryComplete();
             return;
         }
 
-        // Следующая реплика
         currentIndex++;
 
         if (currentIndex < m_textDialogue.Length)
         {
-            m_animatorDialogue.SetBool("endButton", false);
             ShowCurrentEntry();
         }
         else
         {
             EndDialogue();
         }
+        UpdateNavButtonsVisibility();
+    }
+
+    public void ShowPreviousEntry()
+    {
+        if (!isDialogueActive) return;
+        if (currentIndex <= 0) return;
+
+        currentIndex--;
+
+        var entry = m_textDialogue[currentIndex];
+        if (displayText != null)
+            displayText.text = entry.text;
+
+        // Останавливаем любое проигрываемое аудио
+        if (audioSource != null && audioSource.isPlaying)
+            audioSource.Stop();
+
+        isEntryComplete = true;
+        UpdateNavButtonsVisibility();
     }
 
     public void EndDialogue()
@@ -158,8 +153,6 @@ public class Dialogue : MonoBehaviour
         CleanUp();
         DialogueFinished?.Invoke();
     }
-
-    // ─────────────────── Entry display ───────────────────
 
     private void ShowCurrentEntry()
     {
@@ -170,7 +163,7 @@ public class Dialogue : MonoBehaviour
         var entry = m_textDialogue[currentIndex];
 
         if (displayText != null)
-            displayText.text = "";
+            displayText.text = entry.text;
 
         if (audioSource != null)
         {
@@ -181,36 +174,9 @@ public class Dialogue : MonoBehaviour
             }
             else
             {
-                // У реплики нет аудио — останавливаем предыдущий клип
                 audioSource.Stop();
             }
         }
-
-        typingRoutine = StartCoroutine(TypeText(entry.text));
-    }
-
-    private IEnumerator TypeText(string text)
-    {
-        foreach (char c in text)
-        {
-            displayText.text += c;
-            yield return new WaitForSeconds(typingSpeed);
-        }
-
-        typingRoutine = null;
-        OnEntryComplete();
-    }
-
-    private void SkipTyping()
-    {
-        if (typingRoutine != null)
-        {
-            StopCoroutine(typingRoutine);
-            typingRoutine = null;
-        }
-
-        if (currentIndex >= 0 && currentIndex < m_textDialogue.Length)
-            displayText.text = m_textDialogue[currentIndex].text;
 
         OnEntryComplete();
     }
@@ -218,17 +184,26 @@ public class Dialogue : MonoBehaviour
     private void OnEntryComplete()
     {
         isEntryComplete = true;
-        m_animatorDialogue.SetBool("endButton", true);
     }
 
-    // ─────────────────── Animation ───────────────────
+    private void UpdateNavButtonsVisibility()
+    {
+        if(currentIndex >= m_textDialogue.Length)
+        {
+            m_animatorDialogue.SetBool("nazadButton", false);
+        }
+        else
+        {
+            bool showBackButton = currentIndex > 0;
+            m_animatorDialogue.SetBool("nazadButton", showBackButton);
+        }
+    }
 
     public void StartAnimation()
     {
         m_animatorDialogue.SetBool("dialogue", true);
+        m_animatorDialogue.SetBool("endButton", true);
     }
-
-    // ─────────────────── Cleanup ───────────────────
 
     private void CleanUp()
     {
@@ -240,6 +215,7 @@ public class Dialogue : MonoBehaviour
         if (audioSource != null && audioSource.isPlaying)
             audioSource.Stop();
 
+        m_animatorDialogue.SetBool("nazadButton", false);
         m_animatorDialogue.SetBool("dialogue", false);
         m_animatorDialogue.SetBool("endButton", false);
     }
@@ -250,12 +226,6 @@ public class Dialogue : MonoBehaviour
         {
             StopCoroutine(delayRoutine);
             delayRoutine = null;
-        }
-
-        if (typingRoutine != null)
-        {
-            StopCoroutine(typingRoutine);
-            typingRoutine = null;
         }
     }
 }
