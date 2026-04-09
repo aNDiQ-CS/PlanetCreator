@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody), typeof(Collider))]
+[RequireComponent(typeof(Collider))]
 public class DragAndDrop : MonoBehaviour
 {
     [Header("Movement Settings")]
@@ -11,7 +11,6 @@ public class DragAndDrop : MonoBehaviour
     [SerializeField] private float m_pourAngleZ = -110f;
 
     private Rigidbody m_rigidbody;
-    private Wobble m_wobble;
     private bool m_isDragging = false;
     private float m_zDistanceToCamera;
     private Vector3 m_targetWorldPos;
@@ -20,9 +19,6 @@ public class DragAndDrop : MonoBehaviour
     {
         m_rigidbody = GetComponent<Rigidbody>();
         m_rigidbody.interpolation = RigidbodyInterpolation.Interpolate;
-
-        // Wobble на дочернем объекте
-        m_wobble = GetComponentInChildren<Wobble>();
     }
 
     private void Update()
@@ -92,12 +88,6 @@ public class DragAndDrop : MonoBehaviour
     private void HandleAutoRotation()
     {
         Quaternion targetRotation = Quaternion.identity;
-
-        if (m_isDragging && m_wobble != null && m_wobble.IsInsidePourZone())
-        {
-            // Колба над контейнером — поворачиваем в позицию выливания
-            targetRotation = Quaternion.Euler(0, 0, m_pourAngleZ);
-        }
 
         transform.rotation = Quaternion.Slerp(
             transform.rotation, targetRotation,

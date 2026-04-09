@@ -12,7 +12,7 @@ public class DropButtonActivation : MonoBehaviour
 
     [SerializeField][Range(0f, 15f)] private float m_dropDuration = 2f;
     [SerializeField][Range(0f, 15f)] private float m_delay = 5f;
-    
+
     public void RiseButton()
     {
         m_button.enabled = false;
@@ -30,7 +30,6 @@ public class DropButtonActivation : MonoBehaviour
 
             while (elapsed < m_dropDuration)
             {
-                Debug.Log("bebraaaa");
                 elapsed += Time.deltaTime;
                 float t = Easing.InOut(Mathf.Clamp01(elapsed / m_dropDuration));
                 m_manipulator.position = Vector3.Lerp(startPos, endPos, t);
@@ -40,7 +39,7 @@ public class DropButtonActivation : MonoBehaviour
             m_manipulator.position = endPos;
         }
 
-        yield return m_delay;
-        m_miniGame.StopGame();
+        yield return new WaitForSeconds(m_delay);
+        m_miniGame.CompleteGame();
     }
 }

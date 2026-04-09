@@ -11,13 +11,13 @@ using UnityEngine;
 /// При StartGame() — определяет тип, спавнит префаб, завершается.
 ///
 /// Таблица соответствий:
-/// 1. Пустынная  — Близко, любой размер/масса, хим: силикаты+металлы+лёгкие/летучие или силикаты×2 или металлы×2
-/// 2. Газовый Гигант — Далеко, большая масса, хим: лёгкие×2+силикаты/металлы или силикаты+летучие+лёгкие и т.д.
-/// 3. Ледяной Гигант — Далеко, любая масса, хим: силикаты+металлы+летучие или металлы+летучие×2 или силикаты+летучие×2
-/// 4. Лава — Близко, большая масса, хим: содержит радиоактивные
-/// 5. Океан — только через миграцию ледяного гиганта
+/// 1. Пустынная  — Близко, любой размер/масса, хим: силикаты+металлы
+/// 2. Газовый Гигант — Далеко, большая масса, хим: лёгкие газы
+/// 3. Ледяной Гигант — Далеко, летучие вещества (без миграции)
+/// 4. Лава — Близко, большая масса, хим: радиоактивные
+/// 5. Океан — миграция ледяного гиганта (Far + Volatiles + Migration.Yes)
 /// 6. Земля — Среднее, большая масса, хим: силикаты+металлы+летучие
-/// 7. Каменистая — любая зона, малая масса, хим: однородные смеси (силикаты×3, металлы×3, лёгкие×2+сил/мет и т.д.)
+/// 7. Каменистая — малая масса
 /// 8. Протопланета — если ничего не совпало
 /// </summary>
 public class PlanetResolver : MonoBehaviour, IMiniGame
@@ -58,6 +58,7 @@ public class PlanetResolver : MonoBehaviour, IMiniGame
     public event Action MiniGameCompleted;
 
     private GameObject m_spawnedPlanet;
+    private List<GameObject> m_spawnedExtras = new List<GameObject>();
 
     public void StartGame()
     {
@@ -78,19 +79,40 @@ public class PlanetResolver : MonoBehaviour, IMiniGame
 
         // Определяем тип
         string planetType = ResolvePlanetType(data, mixture);
+
+        Debug.Log($"[PlanetResolver] Параметры: Size={data.size}, Mass={data.mass}, " +
+                  $"Remoteness={data.remoteness}, Migration={data.migration}, " +
+                  $"Satellites={data.satellites}");
         Debug.Log($"[PlanetResolver] Итог: {planetType}");
 
-        // Спавним
+        // Спавним планету — завершение мини-игры произойдёт внутри корутины после спавна
         GameObject prefab = GetPrefab(planetType);
         if (prefab != null)
-            StartCoroutine(SpawnPlanet(prefab));
-
-        StartCoroutine(CompleteAfterDelay());
+            StartCoroutine(SpawnPlanetAndComplete(prefab, data.satellites));
+        else
+        {
+            Debug.LogError($"[PlanetResolver] Префаб для '{planetType}' не назначен!");
+            MiniGameCompleted?.Invoke();
+        }
     }
 
     public void StopGame()
     {
         StopAllCoroutines();
+
+        // Очищаем заспавненные объекты при StopGame (для undo)
+        if (m_spawnedPlanet != null)
+        {
+            Destroy(m_spawnedPlanet);
+            m_spawnedPlanet = null;
+        }
+
+        foreach (var obj in m_spawnedExtras)
+        {
+            if (obj != null)
+                Destroy(obj);
+        }
+        m_spawnedExtras.Clear();
     }
 
     // ─────────────────── Resolution ───────────────────
@@ -103,15 +125,14 @@ public class PlanetResolver : MonoBehaviour, IMiniGame
         bool hasVolatiles = mix.Contains(ChemicalType.Volatiles);
         bool hasLight = mix.Contains(ChemicalType.Light);
 
-        int silCount = CountType(mix, ChemicalType.Silicates);
-        int metCount = CountType(mix, ChemicalType.Metal);
-        int volCount = CountType(mix, ChemicalType.Volatiles);
-        int lightCount = CountType(mix, ChemicalType.Light);
-        int radCount = CountType(mix, ChemicalType.Radioactive);
-
         // 4. Лава — Близко + большая масса + радиоактивные
         if (data.remoteness == Remoteness.Near && data.mass == Mass.Heavy && hasRadioactive)
             return "Lava";
+
+        // 5. Океан — миграция ледяного гиганта (проверяем ПЕРЕД ледяным гигантом!)
+        if (data.remoteness == Remoteness.Far && hasVolatiles && data.migration == Migration.Yes
+            && (hasSilicates || hasMetals))
+            return "Ocean";
 
         // 6. Земля — Среднее + большая масса + силикаты+металлы+летучие
         if (data.remoteness == Remoteness.Medium && data.mass == Mass.Heavy
@@ -122,7 +143,7 @@ public class PlanetResolver : MonoBehaviour, IMiniGame
         if (data.remoteness == Remoteness.Far && data.mass == Mass.Heavy && hasLight)
             return "GasGiant";
 
-        // 3. Ледяной Гигант — Далеко + летучие вещества
+        // 3. Ледяной Гигант — Далеко + летучие вещества (без миграции, т.к. проверили выше)
         if (data.remoteness == Remoteness.Far && hasVolatiles
             && (hasSilicates || hasMetals))
             return "IceGiant";
@@ -131,25 +152,12 @@ public class PlanetResolver : MonoBehaviour, IMiniGame
         if (data.remoteness == Remoteness.Near && (hasSilicates || hasMetals) && !hasRadioactive)
             return "Desert";
 
-        // 7. Каменистая — малая масса + однородные смеси
+        // 7. Каменистая — малая масса
         if (data.mass == Mass.Light)
             return "Rocky";
 
-        // 5. Океан — через миграцию ледяного гиганта (проверяется отдельно)
-        // Если был ледяной гигант + миграция → океан
-        if (data.migration == Migration.Yes && data.remoteness == Remoteness.Far && hasVolatiles)
-            return "Ocean";
-
         // 8. Протопланета — если ничего не совпало
         return "Protoplanet";
-    }
-
-    private int CountType(List<ChemicalType> mix, ChemicalType type)
-    {
-        int count = 0;
-        foreach (var t in mix)
-            if (t == type) count++;
-        return count;
     }
 
     private List<ChemicalType> GetSortedChemicals(Dictionary<ChemicalType, float> chemicals)
@@ -157,7 +165,6 @@ public class PlanetResolver : MonoBehaviour, IMiniGame
         var result = new List<ChemicalType>();
         if (chemicals == null) return result;
 
-        // Сортируем по объёму (от большего к меньшему)
         var sorted = new List<KeyValuePair<ChemicalType, float>>(chemicals);
         sorted.Sort((a, b) => b.Value.CompareTo(a.Value));
 
@@ -185,7 +192,7 @@ public class PlanetResolver : MonoBehaviour, IMiniGame
 
     // ─────────────────── Spawn ───────────────────
 
-    private IEnumerator SpawnPlanet(GameObject prefab)
+    private IEnumerator SpawnPlanetAndComplete(GameObject prefab, SatellitesOrRings satelliteChoice)
     {
         Vector3 pos = m_spawnPoint != null ? m_spawnPoint.position : transform.position;
 
@@ -206,10 +213,14 @@ public class PlanetResolver : MonoBehaviour, IMiniGame
 
         tr.localScale = targetScale;
 
-        // Спавним спутники или кольца по результатам мини-игры
-        var data = PlanetBuildData.Instance;
-        if (data != null)
-            SpawnSatellitesOrRings(data.satellites, tr);
+        // Спавним спутники или кольца
+        // Передаём выбор напрямую вместо повторного чтения из PlanetBuildData
+        Debug.Log($"[PlanetResolver] Спавним дополнения: {satelliteChoice}");
+        SpawnSatellitesOrRings(satelliteChoice, tr);
+
+        // Ждём перед завершением, чтобы игрок увидел результат
+        yield return new WaitForSeconds(m_completeDelay);
+        MiniGameCompleted?.Invoke();
     }
 
     private void SpawnSatellitesOrRings(SatellitesOrRings choice, Transform planetTransform)
@@ -230,13 +241,20 @@ public class PlanetResolver : MonoBehaviour, IMiniGame
 
             case SatellitesOrRings.None:
             default:
+                Debug.Log("[PlanetResolver] Без спутников и колец.");
                 break;
         }
     }
 
     private void SpawnSatellites(int count, Transform planetTransform)
     {
-        if (m_satellitePrefab == null) return;
+        if (m_satellitePrefab == null)
+        {
+            Debug.LogError("[PlanetResolver] m_satellitePrefab не назначен в инспекторе!");
+            return;
+        }
+
+        Debug.Log($"[PlanetResolver] Спавним {count} спутник(ов)");
 
         for (int i = 0; i < count; i++)
         {
@@ -251,19 +269,28 @@ public class PlanetResolver : MonoBehaviour, IMiniGame
             if (satellite.GetComponent<OrbitRotation>() == null)
                 satellite.AddComponent<OrbitRotation>();
 
-            // Анимация появления
             StartCoroutine(AnimateScaleIn(satellite.transform, 0.5f, i * 0.2f));
+
+            m_spawnedExtras.Add(satellite);
         }
     }
 
     private void SpawnRings(Transform planetTransform)
     {
-        if (m_ringsPrefab == null) return;
+        if (m_ringsPrefab == null)
+        {
+            Debug.LogError("[PlanetResolver] m_ringsPrefab не назначен в инспекторе!");
+            return;
+        }
+
+        Debug.Log("[PlanetResolver] Спавним кольца");
 
         GameObject rings = Instantiate(m_ringsPrefab, planetTransform);
         rings.transform.localPosition = Vector3.zero;
 
         StartCoroutine(AnimateScaleIn(rings.transform, 0.8f, 0f));
+
+        m_spawnedExtras.Add(rings);
     }
 
     private IEnumerator AnimateScaleIn(Transform tr, float duration, float delay)
@@ -284,11 +311,5 @@ public class PlanetResolver : MonoBehaviour, IMiniGame
         }
 
         tr.localScale = targetScale;
-    }
-
-    private IEnumerator CompleteAfterDelay()
-    {
-        yield return new WaitForSeconds(m_completeDelay);
-        MiniGameCompleted?.Invoke();
     }
 }

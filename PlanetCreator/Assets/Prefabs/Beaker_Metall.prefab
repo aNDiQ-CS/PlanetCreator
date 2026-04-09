@@ -67,8 +67,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u041C\u0435\u0442\u0430\u043B\u043B\u044B"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 5f488b5da63e6b749b9b2d256c0b3fc6, type: 2}
-  m_sharedMaterial: {fileID: 3827630378962098154, guid: 5f488b5da63e6b749b9b2d256c0b3fc6,
+  m_fontAsset: {fileID: 11400000, guid: 037d64bc970f27b4a8a5a62604647648, type: 2}
+  m_sharedMaterial: {fileID: 120472446827795188, guid: 037d64bc970f27b4a8a5a62604647648,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -93,11 +93,11 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 0.15
+  m_fontSize: 0.07
   m_fontSizeBase: 2.7
   m_fontWeight: 400
   m_enableAutoSizing: 1
-  m_fontSizeMin: 0.01
+  m_fontSizeMin: 0.07
   m_fontSizeMax: 72
   m_fontStyle: 17
   m_HorizontalAlignment: 2

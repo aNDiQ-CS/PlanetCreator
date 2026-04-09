@@ -67,8 +67,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u0440\u0430\u0434\u0438\u043E\u0430\u043A\u0442\u0438\u0432\u043D\u044B\u0435\n\u044D\u043B\u043C\u0435\u043D\u0442\u044B"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 5f488b5da63e6b749b9b2d256c0b3fc6, type: 2}
-  m_sharedMaterial: {fileID: 3827630378962098154, guid: 5f488b5da63e6b749b9b2d256c0b3fc6,
+  m_fontAsset: {fileID: 11400000, guid: 037d64bc970f27b4a8a5a62604647648, type: 2}
+  m_sharedMaterial: {fileID: 120472446827795188, guid: 037d64bc970f27b4a8a5a62604647648,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}

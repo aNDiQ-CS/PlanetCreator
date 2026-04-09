@@ -5,8 +5,8 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Мини-игра: объект опускается вниз, игрок нажимает кнопку,
-/// запускается анимация, после окончания — переход дальше.
+/// Мини-игра: объект падает на позицию, появляется кнопка,
+/// по нажатию играет анимация и мини-игра завершается.
 /// </summary>
 public class DropAndAnimateMiniGame : MonoBehaviour, IMiniGame
 {
@@ -29,19 +29,41 @@ public class DropAndAnimateMiniGame : MonoBehaviour, IMiniGame
     public event Action MiniGameCompleted;
 
     private bool m_isActive;
+    private Vector3 m_initialObjectPosition;
+    private Quaternion m_initialObjectRotation;
+    private bool m_initialSaved;
 
     private void Awake()
     {
         if (m_playButton != null)
             m_playButton.onClick.AddListener(OnPlayPressed);
+
+        // Сохраняем начальную позицию объекта
+        if (m_targetObject != null)
+        {
+            m_initialObjectPosition = m_targetObject.position;
+            m_initialObjectRotation = m_targetObject.rotation;
+            m_initialSaved = true;
+        }
     }
 
     public void StartGame()
     {
         m_isActive = true;
 
+        // Восстанавливаем объект в начальную позицию (для повторного запуска после StepBack)
+        if (m_initialSaved && m_targetObject != null)
+        {
+            m_targetObject.position = m_initialObjectPosition;
+            m_targetObject.rotation = m_initialObjectRotation;
+        }
+
         if (m_panel != null)
             m_panel.SetActive(false);
+
+        // Убеждаемся что кнопка активна
+        if (m_playButton != null)
+            m_playButton.enabled = true;
 
         StartCoroutine(DropThenShowButton());
     }
@@ -53,12 +75,27 @@ public class DropAndAnimateMiniGame : MonoBehaviour, IMiniGame
 
         if (m_panel != null)
             m_panel.SetActive(false);
+
+        // НЕ вызываем MiniGameCompleted — StopGame используется при cleanup/undo
+    }
+
+    /// <summary>
+    /// Завершает мини-игру и уведомляет LevelFlowState о завершении.
+    /// Вызывается из DropButtonActivation когда игра завершена штатно.
+    /// </summary>
+    public void CompleteGame()
+    {
+        m_isActive = false;
+        StopAllCoroutines();
+
+        if (m_panel != null)
+            m_panel.SetActive(false);
+
         MiniGameCompleted?.Invoke();
     }
 
     private IEnumerator DropThenShowButton()
     {
-        // Опускаем объект
         if (m_targetObject != null && m_dropPosition != null)
         {
             Vector3 startPos = m_targetObject.position;
@@ -76,7 +113,6 @@ public class DropAndAnimateMiniGame : MonoBehaviour, IMiniGame
             m_targetObject.position = endPos;
         }
 
-        // Показываем кнопку
         if (m_panel != null)
             m_panel.SetActive(true);
     }
@@ -89,7 +125,6 @@ public class DropAndAnimateMiniGame : MonoBehaviour, IMiniGame
         if (m_panel != null)
             m_panel.SetActive(false);
 
-        // Запускаем анимацию
         if (m_animator != null)
             m_animator.SetTrigger(m_triggerName);
 
@@ -98,10 +133,8 @@ public class DropAndAnimateMiniGame : MonoBehaviour, IMiniGame
 
     private IEnumerator WaitForAnimation()
     {
-        // Ждём 1 кадр, чтобы Animator перешёл в новое состояние
         yield return null;
 
-        // Ждём пока текущая анимация доиграет
         if (m_animator != null)
         {
             AnimatorStateInfo stateInfo = m_animator.GetCurrentAnimatorStateInfo(0);

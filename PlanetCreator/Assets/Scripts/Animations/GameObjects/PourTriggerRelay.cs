@@ -19,15 +19,5 @@ public class PourTriggerRelay : MonoBehaviour
             Debug.LogWarning($"[PourTriggerRelay] Wobble не найден в дочерних объектах {gameObject.name}");
     }
 
-    private void OnTriggerEnter(Collider other)
-    {
-        if (m_wobble != null)
-            m_wobble.OnPourZoneEnter(other);
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        if (m_wobble != null)
-            m_wobble.OnPourZoneExit(other);
-    }
+    
 }

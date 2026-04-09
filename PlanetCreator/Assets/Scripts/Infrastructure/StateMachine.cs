@@ -10,6 +10,11 @@ namespace Infrastructure
         private IState m_currentState;
         private Dictionary<Type, IState> m_states = new();
 
+        /// <summary>
+        /// Тип текущего активного стейта (для внешней проверки).
+        /// </summary>
+        public Type CurrentStateType => m_currentState?.GetType();
+
         public void Initialize(params IState[] states)
         {
             foreach (var state in states)
@@ -23,6 +28,16 @@ namespace Infrastructure
             m_currentState?.Exit();
             m_currentState = m_states[typeof(T)];
             m_currentState.Enter();
+        }
+
+        /// <summary>
+        /// Получить стейт по типу (для вызова специфичных методов, например StepBack).
+        /// </summary>
+        public T GetState<T>() where T : class, IState
+        {
+            if (m_states.TryGetValue(typeof(T), out IState state))
+                return state as T;
+            return null;
         }
     }
 }
